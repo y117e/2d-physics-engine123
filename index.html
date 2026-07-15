@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>My Physics Engine - Wind Simulator</title>
+    <title>Fluid Sandbox Game</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background-color: #000;
+            background-color: #050508;
         }
         canvas {
             display: block;
@@ -22,7 +22,7 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(8px);
             padding: 15px;
             border-radius: 10px;
@@ -32,6 +32,7 @@
             flex-direction: column;
             gap: 10px;
             z-index: 10;
+            user-select: none;
         }
         .control-group {
             display: flex;
@@ -42,6 +43,11 @@
         input[type="range"] {
             cursor: pointer;
         }
+        #info {
+            font-size: 11px;
+            color: #888;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -49,13 +55,14 @@
 
     <div id="controls">
         <div class="control-group">
-            <label>중력 (Gravity): <span id="gravityVal">0.15</span></label>
-            <input type="range" id="gravityInput" min="0" max="2" step="0.05" value="0.15">
+            <label>중력 (Gravity): <span id="gravityVal">0.20</span></label>
+            <input type="range" id="gravityInput" min="0" max="1" step="0.05" value="0.20">
         </div>
         <div class="control-group">
-            <label>반발 계수 (Elasticity): <span id="elasticityVal">0.5</span></label>
-            <input type="range" id="elasticityInput" min="0.1" max="1" step="0.05" value="0.5">
+            <label>반발 계수 (Elasticity): <span id="elasticityVal">0.30</span></label>
+            <input type="range" id="elasticityInput" min="0" max="1" step="0.05" value="0.30">
         </div>
+        <div id="info">마우스를 누른 채 드래그하면 물이 나옵니다!</div>
     </div>
 
     <script>
@@ -65,22 +72,22 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // --- 환경 및 유체 파라미터 ---
-        let gravity = 0.15;
-        let elasticity = 0.5; 
-        const interactionRadius = 45; 
-        const pushStrength = 1.2;     
-        const damping = 0.98;
+        // 환경 변수 (모래상자 스타일 최적화)
+        let gravity = 0.20;
+        let elasticity = 0.30; 
+        const interactionRadius = 35; // 입자 반경에 맞춰 압력 범위 조정
+        const pushStrength = 0.8;     
+        const damping = 0.97;         // 약간의 점성 저항
 
-        // --- 마우스 및 바람(Wind) 상태 관리 변수 ---
+        // 마우스 및 바람/드래그 상태
         const mouse = {
             x: -1000,
             y: -1000,
             vx: 0,
             vy: 0,
-            radius: 120, // 바람 영향 반경
-            strength: 2.5, // 바람 세기
-            isHover: false
+            radius: 100,
+            strength: 3.0,
+            isPressed: false // 마우스가 눌렸는지 여부 👈 핵심!
         };
 
         const gravityInput = document.getElementById('gravityInput');
@@ -98,32 +105,50 @@
             elasticityVal.textContent = elasticity.toFixed(2);
         });
 
-        // 마우스 이동 추적
-        window.addEventListener('mousemove', (e) => {
-            const dx = e.clientX - mouse.x;
-            const dy = e.clientY - mouse.y;
-            
-            // 마우스 이동 속도 감지
-            mouse.vx = dx;
-            mouse.vy = dy;
+        // 마우스 상호작용 이벤트 리스너들
+        window.addEventListener('mousedown', (e) => {
+            if (e.target.closest('#controls')) return;
+            mouse.isPressed = true;
+        });
 
+        window.addEventListener('mouseup', () => {
+            mouse.isPressed = false;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.vx = e.clientX - mouse.x;
+            mouse.vy = e.clientY - mouse.y;
             mouse.x = e.clientX;
             mouse.y = e.clientY;
-            mouse.isHover = true;
+        });
+
+        // 스마트폰 터치 대응
+        window.addEventListener('touchstart', (e) => {
+            if (e.target.closest('#controls')) return;
+            mouse.isPressed = true;
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
+        });
+        window.addEventListener('touchend', () => { mouse.isPressed = false; });
+        window.addEventListener('touchmove', (e) => {
+            mouse.x = e.touches[0].clientX;
+            mouse.y = e.touches[0].clientY;
         });
 
         class Particle {
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.radius = 8;
-                this.color = '#38bdf8';
+                this.radius = 5; // 알갱이를 더 촘촘하게 축소! (샌드박스 감성)
                 
-                this.vx = (Math.random() - 0.5) * 2;
-                this.vy = (Math.random() - 0.5) * 2;
+                // 역동적인 컬러링 (파란색 계열 랜덤)
+                const blueHue = Math.floor(Math.random() * 40) + 180;
+                this.color = `hsl(${blueHue}, 85%, 60%)`;
+                
+                this.vx = (Math.random() - 0.5) * 4;
+                this.vy = (Math.random() - 0.5) * 4;
             }
 
-            // SPH 유체 힘 연산
             applyFluidForces(particles) {
                 for (let other of particles) {
                     if (other === this) continue;
@@ -142,56 +167,50 @@
                         this.vx -= normalX * force;
                         this.vy -= normalY * force;
 
-                        this.vx += (other.vx - this.vx) * 0.05;
-                        this.vy += (other.vy - this.vy) * 0.05;
+                        this.vx += (other.vx - this.vx) * 0.04;
+                        this.vy += (other.vy - this.vy) * 0.04;
                     }
                 }
             }
 
-            // [추가] 마우스 풍압(Wind) 연산
             applyWind(mouse) {
+                // 마우스를 안 누르고 그냥 지나갈 때는 '바람(풍압)'으로 밀어냄
+                if (mouse.isPressed) return; 
+
                 const dx = this.x - mouse.x;
                 const dy = this.y - mouse.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
                 if (dist < mouse.radius && dist > 0) {
-                    // 마우스 커서에 가까울수록 센 밀침 힘
                     const force = (1 - dist / mouse.radius) * mouse.strength;
                     const normalX = dx / dist;
                     const normalY = dy / dist;
 
                     this.vx += normalX * force;
                     this.vy += normalY * force;
-
-                    // 마우스 자체 이동 속도도 바람으로 전파
-                    this.vx += mouse.vx * 0.05;
-                    this.vy += mouse.vy * 0.05;
+                    this.vx += mouse.vx * 0.03;
+                    this.vy += mouse.vy * 0.03;
                 }
             }
 
             update() {
                 this.vy += gravity;
-                
                 this.vx *= damping;
                 this.vy *= damping;
 
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // 바닥 충돌
+                // 화면 경계 충돌
                 if (this.y + this.radius > canvas.height) {
                     this.y = canvas.height - this.radius;
                     this.vy = -Math.abs(this.vy) * elasticity;
-                    this.vx *= 0.9;
+                    this.vx *= 0.85; 
                 }
-                
-                // 오른쪽 벽 충돌
                 if (this.x + this.radius > canvas.width) {
                     this.x = canvas.width - this.radius;
                     this.vx = -Math.abs(this.vx) * elasticity;
                 }
-                
-                // 왼쪽 벽 충돌
                 if (this.x - this.radius < 0) {
                     this.x = this.radius;
                     this.vx = Math.abs(this.vx) * elasticity;
@@ -208,62 +227,30 @@
         }
 
         const particles = [];
+        const MAX_PARTICLES = 600; // 성능 방어선 (렉 방지)
 
-        // 클릭 시 입자 15개 폭포 생성
-        window.addEventListener('click', (e) => {
-            if (e.target.closest('#controls')) return;
-
-            for (let i = 0; i < 15; i++) {
-                const offsetX = (Math.random() - 0.5) * 30;
-                const offsetY = (Math.random() - 0.5) * 30;
-                particles.push(new Particle(e.clientX + offsetX, e.clientY + offsetY));
-            }
-        });
-
-        // [추가] 마우스 위치에 바람 방향 화살표 및 반경 가이드 그리기
+        // 마우스 이동 방향 화살표 UI
         function drawWindUI() {
-            if (!mouse.isHover) return;
+            if (mouse.isPressed) return; // 드래그 중엔 화살표 안 그림
 
-            // 1. 바람 영향 반경 범위 원 그리기
-            ctx.beginPath();
-            ctx.arc(mouse.x, mouse.y, mouse.radius, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.15)';
-            ctx.lineWidth = 1.5;
-            ctx.setLineDash([4, 4]); // 점선 효과
-            ctx.stroke();
-            ctx.setLineDash([]); // 점선 원복
-
-            // 2. 마우스 이동 속도에 맞춘 화살표 indicator
             const speed = Math.sqrt(mouse.vx * mouse.vx + mouse.vy * mouse.vy);
-            if (speed > 1) {
+            if (speed > 2) {
                 const angle = Math.atan2(mouse.vy, mouse.vx);
-                const arrowLength = Math.min(speed * 2, 50);
+                const arrowLength = Math.min(speed * 1.5, 40);
 
                 ctx.save();
                 ctx.translate(mouse.x, mouse.y);
                 ctx.rotate(angle);
 
-                // 화살표 몸통
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
                 ctx.lineTo(arrowLength, 0);
-                ctx.strokeStyle = '#f43f5e';
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
+                ctx.lineWidth = 2;
                 ctx.stroke();
-
-                // 화살표 머리
-                ctx.beginPath();
-                ctx.moveTo(arrowLength, 0);
-                ctx.lineTo(arrowLength - 10, -6);
-                ctx.lineTo(arrowLength - 10, 6);
-                ctx.closePath();
-                ctx.fillStyle = '#f43f5e';
-                ctx.fill();
 
                 ctx.restore();
             }
-
-            // 프레임 종료 시 마우스 순간속도 감쇠
             mouse.vx *= 0.5;
             mouse.vy *= 0.5;
         }
@@ -271,19 +258,26 @@
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 유체 상호작용 & 바람 물리 연산
+            // [모래상자 핵심] 마우스를 누르고 있다면 매 프레임마다 마우스 좌표에 알갱이 4개씩 생성!
+            if (mouse.isPressed && particles.length < MAX_PARTICLES) {
+                for(let i=0; i<4; i++) {
+                    const offsetX = (Math.random() - 0.5) * 15;
+                    const offsetY = (Math.random() - 0.5) * 15;
+                    particles.push(new Particle(mouse.x + offsetX, mouse.y + offsetY));
+                }
+            }
+
+            // 물리 및 그리기 연산
             particles.forEach(p => {
                 p.applyFluidForces(particles);
                 p.applyWind(mouse);
             });
 
-            // 위치 업데이트 및 그리기
             particles.forEach(p => {
                 p.update();
                 p.draw();
             });
 
-            // 마우스 바람 UI 그리기
             drawWindUI();
 
             requestAnimationFrame(animate);
