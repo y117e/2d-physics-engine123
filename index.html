@@ -4,6 +4,26 @@
     <meta charset="UTF-8">
     <title>My Physics Engine</title>
     <style>
+      #controls {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(5px);
+        padding: 15px;
+        border-radius: 10px;
+        color: white;
+        font-family: sans-serif;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .control-group {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
         * {
             margin: 0;
             padding: 0;
