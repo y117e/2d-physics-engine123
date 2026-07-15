@@ -49,149 +49,143 @@
 
     <div id="controls">
         <div class="control-group">
-            <label>중력 (Gravity): <span id="gravityVal">0.5</span></label>
-            <input type="range" id="gravityInput" min="0" max="2" step="0.1" value="0.5">
+            <label>중력 (Gravity): <span id="gravityVal">0.15</span></label>
+            <input type="range" id="gravityInput" min="0" max="2" step="0.05" value="0.15">
         </div>
         <div class="control-group">
-            <label>반발 계수 (Elasticity): <span id="elasticityVal">0.8</span></label>
-            <input type="range" id="elasticityInput" min="0.1" max="1" step="0.05" value="0.8">
+            <label>반발 계수 (Elasticity): <span id="elasticityVal">0.5</span></label>
+            <input type="range" id="elasticityInput" min="0.1" max="1" step="0.05" value="0.5">
         </div>
     </div>
 
     <script>
         const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d');
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-// 환경 및 유체 매개변수
-let gravity = 0.3;
-let elasticity = 0.5; // 유체는 바닥에서 너무 튕기지 않게 약간 낮춤
-const interactionRadius = 30; // 입자끼리 서로 영향을 미치는 영향 반경 (R)
-const pushStrength = 0.5;     // 밀어내는 압력 강도
-const damping = 0.98;         // 공기 저항 및 감쇠
+        // 환경 및 유체 매개변수
+        let gravity = 0.15;          // 중력을 살짝 낮추어 바닥 짓눌림 방지
+        let elasticity = 0.5; 
+        const interactionRadius = 45; // 반경을 늘려 반발력 영역 확대
+        const pushStrength = 1.2;     // 반발력 강화
+        const damping = 0.98;
 
-const gravityInput = document.getElementById('gravityInput');
-const elasticityInput = document.getElementById('elasticityInput');
-const gravityVal = document.getElementById('gravityVal');
-const elasticityVal = document.getElementById('elasticityVal');
+        const gravityInput = document.getElementById('gravityInput');
+        const elasticityInput = document.getElementById('elasticityInput');
+        const gravityVal = document.getElementById('gravityVal');
+        const elasticityVal = document.getElementById('elasticityVal');
 
-gravityInput.addEventListener('input', (e) => {
-    gravity = Number(e.target.value);
-    gravityVal.textContent = gravity.toFixed(1);
-});
+        gravityInput.addEventListener('input', (e) => {
+            gravity = Number(e.target.value);
+            gravityVal.textContent = gravity.toFixed(2);
+        });
 
-elasticityInput.addEventListener('input', (e) => {
-    elasticity = Number(e.target.value);
-    elasticityVal.textContent = elasticity.toFixed(2);
-});
+        elasticityInput.addEventListener('input', (e) => {
+            elasticity = Number(e.target.value);
+            elasticityVal.textContent = elasticity.toFixed(2);
+        });
 
-class Particle {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.radius = 8; // 유체 느낌을 위해 알갱이를 작게 변경
-        this.color = '#38bdf8';
-        
-        this.vx = (Math.random() - 0.5) * 2;
-        this.vy = (Math.random() - 0.5) * 2;
-    }
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.radius = 8;
+                this.color = '#38bdf8';
+                
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+            }
 
-    // [핵심] 다른 입자들과의 유체 상호작용 (압력 및 점성)
-    applyFluidForces(particles) {
-        for (let other of particles) {
-            if (other === this) continue;
+            // SPH 기반 압력/점성 힘 연산
+            applyFluidForces(particles) {
+                for (let other of particles) {
+                    if (other === this) continue;
 
-            const dx = other.x - this.x;
-            const dy = other.y - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
+                    const dx = other.x - this.x;
+                    const dy = other.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
 
-            // 영향 반경 내에 있을 때만 밀어내는 힘 작용
-            if (dist < interactionRadius && dist > 0) {
-    // 단순 선형(1 - dist/R) 대신 제곱을 써서 아주 가까워지면 강력하게 튕겨냄
-    const overlap = (1 - dist / interactionRadius);
-    const force = overlap * overlap * pushStrength * 2; 
+                    if (dist < interactionRadius && dist > 0) {
+                        const overlap = (1 - dist / interactionRadius);
+                        const force = overlap * overlap * pushStrength;
 
-    const normalX = dx / dist;
-    const normalY = dy / dist;
+                        const normalX = dx / dist;
+                        const normalY = dy / dist;
 
-    this.vx -= normalX * force;
-    this.vy -= normalY * force;
+                        this.vx -= normalX * force;
+                        this.vy -= normalY * force;
 
-    // 점성을 조금 높여서 입자끼리 단단히 뭉치게 함
-    this.vx += (other.vx - this.vx) * 0.05;
-    this.vy += (other.vy - this.vy) * 0.05;
-}
+                        // 점성 적용
+                        this.vx += (other.vx - this.vx) * 0.05;
+                        this.vy += (other.vy - this.vy) * 0.05;
+                    }
+                }
+            }
+
+            update() {
+                this.vy += gravity;
+                
+                this.vx *= damping;
+                this.vy *= damping;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // [충돌 판정 각각 분리]
+                // 1. 바닥 충돌
+                if (this.y + this.radius > canvas.height) {
+                    this.y = canvas.height - this.radius;
+                    this.vy = -Math.abs(this.vy) * elasticity;
+                    this.vx *= 0.9;
+                }
+                
+                // 2. 우측 벽 충돌
+                if (this.x + this.radius > canvas.width) {
+                    this.x = canvas.width - this.radius;
+                    this.vx = -Math.abs(this.vx) * elasticity;
+                }
+                
+                // 3. 좌측 벽 충돌
+                if (this.x - this.radius < 0) {
+                    this.x = this.radius;
+                    this.vx = Math.abs(this.vx) * elasticity;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+            }
         }
-    }
 
-    update() {
-        this.vy += gravity;
-    
-    this.vx *= damping;
-    this.vy *= damping;
+        const particles = [];
 
-    this.x += this.vx;
-    this.y += this.vy;
+        window.addEventListener('click', (e) => {
+            if (e.target.closest('#controls')) return;
 
-    // 바닥 충돌 시 속도 전달을 좀 더 부드럽게
-    if (this.y + this.radius > canvas.height) {
-        this.y = canvas.height - this.radius;
-        this.vy = -Math.abs(this.vy) * elasticity;
-        this.vx *= 0.9; // 바닥 마찰력 추가
+            for (let i = 0; i < 15; i++) {
+                const offsetX = (Math.random() - 0.5) * 30;
+                const offsetY = (Math.random() - 0.5) * 30;
+                particles.push(new Particle(e.clientX + offsetX, e.clientY + offsetY));
+            }
+        });
 
-        // 바닥 및 벽면 충돌 처리
-        if (this.y + this.radius > canvas.height) {
-            this.y = canvas.height - this.radius;
-            this.vy = -Math.abs(this.vy) * elasticity;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => p.applyFluidForces(particles));
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(animate);
         }
-        if (this.x + this.radius > canvas.width) {
-            this.x = canvas.width - this.radius;
-            this.vx = -Math.abs(this.vx) * elasticity;
-        }
-        if (this.x - this.radius < 0) {
-            this.x = this.radius;
-            this.vx = Math.abs(this.vx) * elasticity;
-        }
-    }
-
-    draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.closePath();
-    }
-}
-
-const particles = [];
-
-// 마우스 클릭 시 알갱이 15개를 폭포수처럼 한 번에 뿌림
-window.addEventListener('click', (e) => {
-    if (e.target.closest('#controls')) return;
-
-    for (let i = 0; i < 15; i++) {
-        const offsetX = (Math.random() - 0.5) * 30;
-        const offsetY = (Math.random() - 0.5) * 30;
-        particles.push(new Particle(e.clientX + offsetX, e.clientY + offsetY));
-    }
-});
-
-function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // 1단계: 모든 입자의 유체 힘 연산
-    particles.forEach(p => p.applyFluidForces(particles));
-
-    // 2단계: 위치 업데이트 및 그리기
-    particles.forEach(p => {
-        p.update();
-        p.draw();
-    });
-
-    requestAnimationFrame(animate);
-}
 
         animate();
     </script>
