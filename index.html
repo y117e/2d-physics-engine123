@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>Fluid Sandbox Game</title>
+    <title>Fluid Sandbox Game - Premium Effect</title>
     <style>
         * {
             margin: 0;
@@ -55,14 +55,14 @@
 
     <div id="controls">
         <div class="control-group">
-            <label>중력 (Gravity): <span id="gravityVal">0.20</span></label>
-            <input type="range" id="gravityInput" min="0" max="1" step="0.05" value="0.20">
+            <label>중력 (Gravity): <span id="gravityVal">0.15</span></label>
+            <input type="range" id="gravityInput" min="0" max="1" step="0.05" value="0.15">
         </div>
         <div class="control-group">
-            <label>반발 계수 (Elasticity): <span id="elasticityVal">0.30</span></label>
-            <input type="range" id="elasticityInput" min="0" max="1" step="0.05" value="0.30">
+            <label>반발 계수 (Elasticity): <span id="elasticityVal">0.40</span></label>
+            <input type="range" id="elasticityInput" min="0" max="1" step="0.05" value="0.40">
         </div>
-        <div id="info">마우스를 누른 채 드래그하면 물이 나옵니다!</div>
+        <div id="info">드래그: 물 생성 | 우클릭: 지우개 | 이동: 바람 효과</div>
     </div>
 
     <script>
@@ -72,22 +72,21 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // 환경 변수 (모래상자 스타일 최적화)
-        let gravity = 0.20;
-        let elasticity = 0.30; 
-        const interactionRadius = 35; // 입자 반경에 맞춰 압력 범위 조정
-        const pushStrength = 0.8;     
-        const damping = 0.97;         // 약간의 점성 저항
+        // 환경 변수 튜닝
+        let gravity = 0.15; // 바닥 밀도 균형을 위해 중력을 살짝 다운
+        let elasticity = 0.40; 
+        const interactionRadius = 40; 
+        const pushStrength = 1.0;     
+        const damping = 0.97;         
 
-        // 마우스 및 바람/드래그 상태
         const mouse = {
             x: -1000,
             y: -1000,
             vx: 0,
             vy: 0,
             radius: 100,
-            strength: 3.0,
-            isPressed: false // 마우스가 눌렸는지 여부 👈 핵심!
+            strength: 3.5,
+            isPressed: false
         };
 
         const gravityInput = document.getElementById('gravityInput');
@@ -105,15 +104,25 @@
             elasticityVal.textContent = elasticity.toFixed(2);
         });
 
-        // 마우스 상호작용 이벤트 리스너들
+        // 마우스 조작 인터페이스 (우클릭 지우개 포함)
         window.addEventListener('mousedown', (e) => {
             if (e.target.closest('#controls')) return;
-            mouse.isPressed = true;
+            
+            if (e.button === 2) { 
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    const dx = particles[i].x - e.clientX;
+                    const dy = particles[i].y - e.clientY;
+                    if (Math.sqrt(dx*dx + dy*dy) < 80) {
+                        particles.splice(i, 1);
+                    }
+                }
+            } else {
+                mouse.isPressed = true;
+            }
         });
 
-        window.addEventListener('mouseup', () => {
-            mouse.isPressed = false;
-        });
+        window.addEventListener('mouseup', () => { mouse.isPressed = false; });
+        window.addEventListener('contextmenu', e => e.preventDefault()); // 우클릭 메뉴 차단
 
         window.addEventListener('mousemove', (e) => {
             mouse.vx = e.clientX - mouse.x;
@@ -122,34 +131,22 @@
             mouse.y = e.clientY;
         });
 
-        // 스마트폰 터치 대응
-        window.addEventListener('touchstart', (e) => {
-            if (e.target.closest('#controls')) return;
-            mouse.isPressed = true;
-            mouse.x = e.touches[0].clientX;
-            mouse.y = e.touches[0].clientY;
-        });
-        window.addEventListener('touchend', () => { mouse.isPressed = false; });
-        window.addEventListener('touchmove', (e) => {
-            mouse.x = e.touches[0].clientX;
-            mouse.y = e.touches[0].clientY;
-        });
-
         class Particle {
             constructor(x, y) {
                 this.x = x;
                 this.y = y;
-                this.radius = 5; // 알갱이를 더 촘촘하게 축소! (샌드박스 감성)
+                this.radius = 5; 
                 
-                // 역동적인 컬러링 (파란색 계열 랜덤)
-                const blueHue = Math.floor(Math.random() * 40) + 180;
-                this.color = `hsl(${blueHue}, 85%, 60%)`;
+                // 일렁이는 네온 느낌의 HSL 컬러링
+                const blueHue = Math.floor(Math.random() * 30) + 190;
+                this.color = `hsl(${blueHue}, 90%, 60%)`;
                 
                 this.vx = (Math.random() - 0.5) * 4;
                 this.vy = (Math.random() - 0.5) * 4;
             }
 
             applyFluidForces(particles) {
+                // 1. 다른 입자들 간의 밀침과 점성
                 for (let other of particles) {
                     if (other === this) continue;
 
@@ -171,10 +168,18 @@
                         this.vy += (other.vy - this.vy) * 0.04;
                     }
                 }
+
+                // 💡 [핵심] 2. 바닥 경계선 압력 필드 (바닥 찰붙음 방지)
+                const floorDist = canvas.height - this.y;
+                const boundaryRadius = 50; // 바닥 위 50px 영역부터 밀어 올림
+                if (floorDist < boundaryRadius && floorDist > 0) {
+                    const floorOverlap = (1 - floorDist / boundaryRadius);
+                    // 바닥에 가까워질수록 위쪽(-vy)으로 가하는 척력을 급격하게 강화
+                    this.vy -= floorOverlap * floorOverlap * 1.5; 
+                }
             }
 
             applyWind(mouse) {
-                // 마우스를 안 누르고 그냥 지나갈 때는 '바람(풍압)'으로 밀어냄
                 if (mouse.isPressed) return; 
 
                 const dx = this.x - mouse.x;
@@ -201,7 +206,7 @@
                 this.x += this.vx;
                 this.y += this.vy;
 
-                // 화면 경계 충돌
+                // 단단한 물리적 경계 충돌 처리
                 if (this.y + this.radius > canvas.height) {
                     this.y = canvas.height - this.radius;
                     this.vy = -Math.abs(this.vy) * elasticity;
@@ -227,58 +232,35 @@
         }
 
         const particles = [];
-        const MAX_PARTICLES = 600; // 성능 방어선 (렉 방지)
-
-        // 마우스 이동 방향 화살표 UI
-        function drawWindUI() {
-            if (mouse.isPressed) return; // 드래그 중엔 화살표 안 그림
-
-            const speed = Math.sqrt(mouse.vx * mouse.vx + mouse.vy * mouse.vy);
-            if (speed > 2) {
-                const angle = Math.atan2(mouse.vy, mouse.vx);
-                const arrowLength = Math.min(speed * 1.5, 40);
-
-                ctx.save();
-                ctx.translate(mouse.x, mouse.y);
-                ctx.rotate(angle);
-
-                ctx.beginPath();
-                ctx.moveTo(0, 0);
-                ctx.lineTo(arrowLength, 0);
-                ctx.strokeStyle = 'rgba(244, 63, 94, 0.7)';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-
-                ctx.restore();
-            }
-            mouse.vx *= 0.5;
-            mouse.vy *= 0.5;
-        }
+        const MAX_PARTICLES = 2500; 
 
         function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // 💡 잔상 효과의 핵심: 투명도가 있는 배경색으로 덮어 씌우기
+            ctx.fillStyle = 'rgba(5, 5, 8, 0.2)'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // [모래상자 핵심] 마우스를 누르고 있다면 매 프레임마다 마우스 좌표에 알갱이 4개씩 생성!
             if (mouse.isPressed && particles.length < MAX_PARTICLES) {
-                for(let i=0; i<4; i++) {
+                for(let i = 0; i < 4; i++) {
                     const offsetX = (Math.random() - 0.5) * 15;
                     const offsetY = (Math.random() - 0.5) * 15;
                     particles.push(new Particle(mouse.x + offsetX, mouse.y + offsetY));
                 }
             }
 
-            // 물리 및 그리기 연산
             particles.forEach(p => {
                 p.applyFluidForces(particles);
                 p.applyWind(mouse);
             });
 
-            particles.forEach(p => {
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
                 p.update();
                 p.draw();
-            });
 
-            drawWindUI();
+                if (p.y > canvas.height + 20 || p.x < -20 || p.x > canvas.width + 20) {
+                    particles.splice(i, 1);
+                }
+            }
 
             requestAnimationFrame(animate);
         }
