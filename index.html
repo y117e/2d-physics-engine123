@@ -1,138 +1,140 @@
 <!DOCTYPE html>
 <html lang="ko">
-  <head>
+<head>
     <meta charset="UTF-8">
     <title>My Physics Engine</title>
     <style>
-      #controls {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(5px);
-        padding: 15px;
-        border-radius: 10px;
-        color: white;
-        font-family: sans-serif;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-    .control-group {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-    }
         * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             background-color: #000;
         }
         canvas {
             display: block;
         }
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        input[type="range"] {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
-  <div id="controls">
-    <div class="control-group">
-        <label>중력 (Gravity): <span id="gravityVal">0.5</span></label>
-        <input type="range" id="gravityInput" min="0" max="2" step="0.1" value="0.5">
+
+    <div id="controls">
+        <div class="control-group">
+            <label>중력 (Gravity): <span id="gravityVal">0.5</span></label>
+            <input type="range" id="gravityInput" min="0" max="2" step="0.1" value="0.5">
+        </div>
+        <div class="control-group">
+            <label>반발 계수 (Elasticity): <span id="elasticityVal">0.8</span></label>
+            <input type="range" id="elasticityInput" min="0.1" max="1" step="0.05" value="0.8">
+        </div>
     </div>
-    <div class="control-group">
-        <label>반발 계수 (Elasticity): <span id="elasticityVal">0.8</span></label>
-        <input type="range" id="elasticityInput" min="0.1" max="1" step="0.05" value="0.8">
-    </div>
-</div>
 
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
-        // 화면 크기에 맞게 캔버스 설정
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-let gravity = 0.5;
-let elasticity = 0.8; // 반발 계수 (기존의 -0.8 값)
+        // 환경 변수 설정
+        let gravity = 0.5;
+        let elasticity = 0.8;
 
-const gravityInput = document.getElementById('gravityInput');
-const elasticityInput = document.getElementById('elasticityInput');
-const gravityVal = document.getElementById('gravityVal');
-const elasticityVal = document.getElementById('elasticityVal');
+        const gravityInput = document.getElementById('gravityInput');
+        const elasticityInput = document.getElementById('elasticityInput');
+        const gravityVal = document.getElementById('gravityVal');
+        const elasticityVal = document.getElementById('elasticityVal');
 
-// 슬라이더 값이 바뀔 때마다 실시간으로 변수 업데이트
-gravityInput.addEventListener('input', (e) => {
-    gravity = parseFloat(e.target.value);
-    gravityVal.textContent = gravity;
-});
+        // 슬라이더 이벤트 연동
+        gravityInput.addEventListener('input', (e) => {
+            gravity = parseFloat(e.target.value);
+            gravityVal.textContent = gravity;
+        });
 
-elasticityInput.addEventListener('input', (e) => {
-    elasticity = parseFloat(e.target.value);
-    elasticityVal.textContent = elasticity;
-});
-      class Particle {
-    constructor(x, y, radius, color) {
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
-        this.color = color;
-        
-        this.vx = 2; // 가로 방향 속도
-        this.vy = 0; // 세로 방향 속도 (초기값 0)
-    }
+        elasticityInput.addEventListener('input', (e) => {
+            elasticity = parseFloat(e.target.value);
+            elasticityVal.textContent = elasticity;
+        });
 
-    // 위치 업데이트 및 바닥 충돌 연산
-    update() {
-        this.vy += gravity; // 매 프레임마다 중력을 더해 떨어뜨림
-        
-        this.x += this.vx;
-        this.y += this.vy;
+        class Particle {
+            constructor(x, y, radius, color) {
+                this.x = x;
+                this.y = y;
+                this.radius = radius;
+                this.color = color;
+                
+                this.vx = 2;
+                this.vy = 0;
+            }
 
-        // 바닥에 부딪혔을 때 처리 (화면 아래쪽 바닥)
-        if (this.y + this.radius > canvas.height) {
-            this.y = canvas.height - this.radius; // 바닥을 뚫지 못하게 위치 고정
-           if (this.y + this.radius > canvas.height) {
-    this.y = canvas.height - this.radius;
-    this.vy *= -elasticity; // 실시간 변경되는 elasticity 적용!
-}
+            update() {
+                this.vy += gravity;
+                
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // 바닥 충돌 처리 (중복 제거 정리)
+                if (this.y + this.radius > canvas.height) {
+                    this.y = canvas.height - this.radius;
+                    this.vy *= -elasticity;
+                }
+
+                // 좌우 벽면 충돌 처리
+                if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
+                    this.vx *= -1;
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.closePath();
+            }
         }
 
-        // 벽면(오른쪽/왼쪽) 충돌 처리
-        if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
-            this.vx *= -1;
+        const ball = new Particle(100, 100, 20, '#38bdf8');
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ball.update();
+            ball.draw();
+
+            requestAnimationFrame(animate);
         }
-    }
 
-    // 화면에 그리기
-    draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        ctx.closePath();
-    }
-}
-
-// --- [3] 공 객체 하나 생성 ---
-// 화면 상단 중앙 근처(x: 100, y: 100)에 반지름 20짜리 파란색 공 생성
-const ball = new Particle(100, 100, 20, '#38bdf8');
-
-// --- [4] 메인 애니메이션 루프 ---
-function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // 이전 프레임 잔상 지우기
-    
-    ball.update(); // 공 위치 및 물리학 연산
-    ball.draw();   // 공 그리기
-
-    requestAnimationFrame(animate);
-}
-
-animate();
-
+        animate();
     </script>
 </body>
 </html>
