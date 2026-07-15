@@ -56,8 +56,24 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-      const gravity = 0.5;
+let gravity = 0.5;
+let elasticity = 0.8; // 반발 계수 (기존의 -0.8 값)
 
+const gravityInput = document.getElementById('gravityInput');
+const elasticityInput = document.getElementById('elasticityInput');
+const gravityVal = document.getElementById('gravityVal');
+const elasticityVal = document.getElementById('elasticityVal');
+
+// 슬라이더 값이 바뀔 때마다 실시간으로 변수 업데이트
+gravityInput.addEventListener('input', (e) => {
+    gravity = parseFloat(e.target.value);
+    gravityVal.textContent = gravity;
+});
+
+elasticityInput.addEventListener('input', (e) => {
+    elasticity = parseFloat(e.target.value);
+    elasticityVal.textContent = elasticity;
+});
       class Particle {
     constructor(x, y, radius, color) {
         this.x = x;
@@ -79,7 +95,10 @@
         // 바닥에 부딪혔을 때 처리 (화면 아래쪽 바닥)
         if (this.y + this.radius > canvas.height) {
             this.y = canvas.height - this.radius; // 바닥을 뚫지 못하게 위치 고정
-            this.vy *= -0.8; // 반대 방향으로 튕기면서 에너지 손실(-0.8)
+           if (this.y + this.radius > canvas.height) {
+    this.y = canvas.height - this.radius;
+    this.vy *= -elasticity; // 실시간 변경되는 elasticity 적용!
+}
         }
 
         // 벽면(오른쪽/왼쪽) 충돌 처리
