@@ -60,22 +60,24 @@
 
     <script>
         const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+const ctx = canvas.getContext('2d');
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-        // 환경 변수 설정
-        let gravity = 0.5;
-        let elasticity = 0.8;
+// 환경 및 유체 매개변수
+let gravity = 0.3;
+let elasticity = 0.5; // 유체는 바닥에서 너무 튕기지 않게 약간 낮춤
+const interactionRadius = 40; // 입자끼리 서로 영향을 미치는 영향 반경 (R)
+const pushStrength = 0.5;     // 밀어내는 압력 강도
+const damping = 0.98;         // 공기 저항 및 감쇠
 
-        const gravityInput = document.getElementById('gravityInput');
-        const elasticityInput = document.getElementById('elasticityInput');
-        const gravityVal = document.getElementById('gravityVal');
-        const elasticityVal = document.getElementById('elasticityVal');
+const gravityInput = document.getElementById('gravityInput');
+const elasticityInput = document.getElementById('elasticityInput');
+const gravityVal = document.getElementById('gravityVal');
+const elasticityVal = document.getElementById('elasticityVal');
 
-        // 슬라이더 이벤트 연동
-        gravityInput.addEventListener('input', (e) => {
+gravityInput.addEventListener('input', (e) => {
     gravity = Number(e.target.value);
     gravityVal.textContent = gravity.toFixed(1);
 });
@@ -85,55 +87,107 @@ elasticityInput.addEventListener('input', (e) => {
     elasticityVal.textContent = elasticity.toFixed(2);
 });
 
-        class Particle {
-            constructor(x, y, radius, color) {
-                this.x = x;
-                this.y = y;
-                this.radius = radius;
-                this.color = color;
-                
-                this.vx = 2;
-                this.vy = 0;
-            }
+class Particle {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 8; // 유체 느낌을 위해 알갱이를 작게 변경
+        this.color = '#38bdf8';
+        
+        this.vx = (Math.random() - 0.5) * 2;
+        this.vy = (Math.random() - 0.5) * 2;
+    }
 
-            update() {
-                this.vy += gravity;
-                
-                this.x += this.vx;
-                this.y += this.vy;
+    // [핵심] 다른 입자들과의 유체 상호작용 (압력 및 점성)
+    applyFluidForces(particles) {
+        for (let other of particles) {
+            if (other === this) continue;
 
-                // 바닥 충돌 처리 (중복 제거 정리)
-                if (this.y + this.radius > canvas.height) {
-                    this.y = canvas.height - this.radius;
-                    this.vy *= -elasticity;
-                }
+            const dx = other.x - this.x;
+            const dy = other.y - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
 
-                // 좌우 벽면 충돌 처리
-                if (this.x + this.radius > canvas.width || this.x - this.radius < 0) {
-                    this.vx *= -1;
-                }
-            }
+            // 영향 반경 내에 있을 때만 밀어내는 힘 작용
+            if (dist < interactionRadius && dist > 0) {
+                // 거리가 가까울수록 힘이 커짐 (1 - dist/R)
+                const force = (1 - dist / interactionRadius) * pushStrength;
+                const normalX = dx / dist;
+                const normalY = dy / dist;
 
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-                ctx.closePath();
+                // 반대 방향으로 밀어냄 (압력)
+                this.vx -= normalX * force;
+                this.vy -= normalY * force;
+
+                // 점성 (속도 평준화)
+                this.vx += (other.vx - this.vx) * 0.02;
+                this.vy += (other.vy - this.vy) * 0.02;
             }
         }
+    }
 
-        const ball = new Particle(100, 100, 20, '#38bdf8');
+    update() {
+        this.vy += gravity; // 중력 적용
+        
+        // 속도 감쇠 (공기 저항/마찰)
+        this.vx *= damping;
+        this.vy *= damping;
 
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            ball.update();
-            ball.draw();
+        this.x += this.vx;
+        this.y += this.vy;
 
-            requestAnimationFrame(animate);
+        // 바닥 및 벽면 충돌 처리
+        if (this.y + this.radius > canvas.height) {
+            this.y = canvas.height - this.radius;
+            this.vy = -Math.abs(this.vy) * elasticity;
         }
+        if (this.x + this.radius > canvas.width) {
+            this.x = canvas.width - this.radius;
+            this.vx = -Math.abs(this.vx) * elasticity;
+        }
+        if (this.x - this.radius < 0) {
+            this.x = this.radius;
+            this.vx = Math.abs(this.vx) * elasticity;
+        }
+    }
 
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+        ctx.closePath();
+    }
+}
+
+const particles = [];
+
+// 마우스 클릭 시 알갱이 15개를 폭포수처럼 한 번에 뿌림
+window.addEventListener('click', (e) => {
+    if (e.target.closest('#controls')) return;
+
+    for (let i = 0; i < 15; i++) {
+        const offsetX = (Math.random() - 0.5) * 30;
+        const offsetY = (Math.random() - 0.5) * 30;
+        particles.push(new Particle(e.clientX + offsetX, e.clientY + offsetY));
+    }
+});
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1단계: 모든 입자의 유체 힘 연산
+    particles.forEach(p => p.applyFluidForces(particles));
+
+    // 2단계: 위치 업데이트 및 그리기
+    particles.forEach(p => {
+        p.update();
+        p.draw();
+    });
+
+    requestAnimationFrame(animate);
+}
+
+animate();
         animate();
     </script>
 </body>
