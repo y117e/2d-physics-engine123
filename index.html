@@ -109,31 +109,37 @@ class Particle {
 
             // 영향 반경 내에 있을 때만 밀어내는 힘 작용
             if (dist < interactionRadius && dist > 0) {
-                // 거리가 가까울수록 힘이 커짐 (1 - dist/R)
-                const force = (1 - dist / interactionRadius) * pushStrength;
-                const normalX = dx / dist;
-                const normalY = dy / dist;
+    // 단순 선형(1 - dist/R) 대신 제곱을 써서 아주 가까워지면 강력하게 튕겨냄
+    const overlap = (1 - dist / interactionRadius);
+    const force = overlap * overlap * pushStrength * 2; 
 
-                // 반대 방향으로 밀어냄 (압력)
-                this.vx -= normalX * force;
-                this.vy -= normalY * force;
+    const normalX = dx / dist;
+    const normalY = dy / dist;
 
-                // 점성 (속도 평준화)
-                this.vx += (other.vx - this.vx) * 0.02;
-                this.vy += (other.vy - this.vy) * 0.02;
-            }
+    this.vx -= normalX * force;
+    this.vy -= normalY * force;
+
+    // 점성을 조금 높여서 입자끼리 단단히 뭉치게 함
+    this.vx += (other.vx - this.vx) * 0.05;
+    this.vy += (other.vy - this.vy) * 0.05;
+}
         }
     }
 
     update() {
-        this.vy += gravity; // 중력 적용
-        
-        // 속도 감쇠 (공기 저항/마찰)
-        this.vx *= damping;
-        this.vy *= damping;
+        this.vy += gravity;
+    
+    this.vx *= damping;
+    this.vy *= damping;
 
-        this.x += this.vx;
-        this.y += this.vy;
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // 바닥 충돌 시 속도 전달을 좀 더 부드럽게
+    if (this.y + this.radius > canvas.height) {
+        this.y = canvas.height - this.radius;
+        this.vy = -Math.abs(this.vy) * elasticity;
+        this.vx *= 0.9; // 바닥 마찰력 추가
 
         // 바닥 및 벽면 충돌 처리
         if (this.y + this.radius > canvas.height) {
