@@ -76,14 +76,14 @@
 
         // 슬라이더 이벤트 연동
         gravityInput.addEventListener('input', (e) => {
-            gravity = parseFloat(e.target.value);
-            gravityVal.textContent = gravity;
-        });
+    gravity = Number(e.target.value);
+    gravityVal.textContent = gravity.toFixed(1);
+});
 
-        elasticityInput.addEventListener('input', (e) => {
-            elasticity = parseFloat(e.target.value);
-            elasticityVal.textContent = elasticity;
-        });
+elasticityInput.addEventListener('input', (e) => {
+    elasticity = Number(e.target.value);
+    elasticityVal.textContent = elasticity.toFixed(2);
+});
 
         class Particle {
             constructor(x, y, radius, color) {
