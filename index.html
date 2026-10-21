@@ -1,271 +1,2504 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>Fluid Sandbox Game - Premium Effect</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body, html {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #050508;
-        }
-        canvas {
-            display: block;
-        }
-        #controls {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(8px);
-            padding: 15px;
-            border-radius: 10px;
-            color: white;
-            font-family: sans-serif;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 10;
-            user-select: none;
-        }
-        .control-group {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-        }
-        input[type="range"] {
-            cursor: pointer;
-        }
-        #info {
-            font-size: 11px;
-            color: #888;
-            margin-top: 5px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="화학 샌드박스">
+  <title>픽셀 화학 샌드박스 (Pixel Chemistry Sandbox)</title>
+  <style>
+    /* Complete self-contained CSS (Zero external CDN or font network requests) */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid #1e293b; }
+    html, body {
+      background-color: #020617;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    button {
+      font-family: inherit;
+      font-size: inherit;
+      color: inherit;
+      background: none;
+      cursor: pointer;
+      border: 0 solid transparent;
+      line-height: inherit;
+    }
+    .font-mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    /* Layout & Display */
+    .block { display: block; }
+    .inline-block { display: inline-block; }
+    .flex { display: flex; }
+    .grid { display: grid; }
+    .hidden { display: none !important; }
+    .flex-1 { flex: 1 1 0%; }
+    .flex-col { flex-direction: column; }
+    .flex-wrap { flex-wrap: wrap; }
+    .shrink-0 { flex-shrink: 0; }
+    .items-center { align-items: center; }
+    .items-start { align-items: flex-start; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .justify-end { justify-content: flex-end; }
+    .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    /* Positioning */
+    .relative { position: relative; }
+    .absolute { position: absolute; }
+    .fixed { position: fixed; }
+    .inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+    .top-3 { top: 0.75rem; }
+    .right-3 { right: 0.75rem; }
+    .bottom-2 { bottom: 0.5rem; }
+    .left-2 { left: 0.5rem; }
+    .z-10 { z-index: 10; }
+    .z-20 { z-index: 20; }
+    .z-30 { z-index: 30; }
+    .z-50 { z-index: 50; }
+    /* Sizing */
+    .min-h-screen { min-height: 100vh; }
+    .min-h-\[58px\] { min-height: 58px; }
+    .min-w-0 { min-width: 0px; }
+    .w-0 { width: 0px; }
+    .w-3 { width: 0.75rem; }
+    .w-3\.5 { width: 0.875rem; }
+    .w-8 { width: 2rem; }
+    .w-full { width: 100%; }
+    .h-2 { height: 0.5rem; }
+    .h-3 { height: 0.75rem; }
+    .h-3\.5 { height: 0.875rem; }
+    .h-8 { height: 2rem; }
+    .h-auto { height: auto; }
+    .h-full { height: 100%; }
+    .h-\[520px\] { height: 520px; }
+    .max-h-\[58vh\] { max-height: 58vh; }
+    .max-h-\[700px\] { max-height: 700px; }
+    .max-h-\[85vh\] { max-height: 85vh; }
+    .max-w-xs { max-width: 20rem; }
+    .max-w-sm { max-width: 24rem; }
+    .max-w-2xl { max-width: 42rem; }
+    .max-w-\[1700px\] { max-width: 1700px; }
+    /* Spacing & Gaps */
+    .mx-auto { margin-left: auto; margin-right: auto; }
+    .ml-1 { margin-left: 0.25rem; }
+    .mr-1 { margin-right: 0.25rem; }
+    .mt-0\.5 { margin-top: 0.125rem; }
+    .mt-1\.5 { margin-top: 0.375rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mb-2 { margin-bottom: 0.5rem; }
+    .p-0\.5 { padding: 0.125rem; }
+    .p-1 { padding: 0.25rem; }
+    .p-1\.5 { padding: 0.375rem; }
+    .p-2 { padding: 0.5rem; }
+    .p-2\.5 { padding: 0.625rem; }
+    .p-3 { padding: 0.75rem; }
+    .p-4 { padding: 1rem; }
+    .p-5 { padding: 1.25rem; }
+    .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
+    .px-1\.5 { padding-left: 0.375rem; padding-right: 0.375rem; }
+    .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+    .px-2\.5 { padding-left: 0.625rem; padding-right: 0.625rem; }
+    .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+    .px-4 { padding-left: 1rem; padding-right: 1rem; }
+    .px-5 { padding-left: 1.25rem; padding-right: 1.25rem; }
+    .py-0\.2 { padding-top: 0.05rem; padding-bottom: 0.05rem; }
+    .py-0\.5 { padding-top: 0.125rem; padding-bottom: 0.125rem; }
+    .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+    .py-1\.5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+    .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    .py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+    .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+    .py-3\.5 { padding-top: 0.875rem; padding-bottom: 0.875rem; }
+    .pt-2 { padding-top: 0.5rem; }
+    .pb-1 { padding-bottom: 0.25rem; }
+    .pb-2\.5 { padding-bottom: 0.625rem; }
+    .pr-1 { padding-right: 0.25rem; }
+    .gap-1 { gap: 0.25rem; }
+    .gap-1\.5 { gap: 0.375rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-2\.5 { gap: 0.625rem; }
+    .gap-3 { gap: 0.75rem; }
+    .gap-4 { gap: 1rem; }
+    .space-y-2\.5 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.625rem; }
+    .divide-y > :not([hidden]) ~ :not([hidden]) { border-top-width: 1px; border-color: rgba(30, 41, 59, 0.6); }
+    /* Overflow */
+    .overflow-hidden { overflow: hidden; }
+    .overflow-x-auto { overflow-x: auto; }
+    .overflow-y-auto { overflow-y: auto; }
+    .overflow-x-hidden { overflow-x: hidden; }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .whitespace-nowrap { white-space: nowrap; }
+    .break-words { overflow-wrap: break-word; }
+    /* Borders & Radius */
+    .border { border-width: 1px; }
+    .border-b { border-bottom-width: 1px; }
+    .border-b-2 { border-bottom-width: 2px; }
+    .border-t { border-top-width: 1px; }
+    .rounded-sm { border-radius: 0.125rem; }
+    .rounded { border-radius: 0.25rem; }
+    .rounded-md { border-radius: 0.375rem; }
+    .rounded-lg { border-radius: 0.5rem; }
+    .rounded-xl { border-radius: 0.75rem; }
+    .rounded-full { border-radius: 9999px; }
+    .rounded-t { border-top-left-radius: 0.25rem; border-top-right-radius: 0.25rem; }
+    .border-slate-700 { border-color: #334155; }
+    .border-slate-800 { border-color: #1e293b; }
+    .border-slate-800\/80 { border-color: rgba(30, 41, 59, 0.8); }
+    .border-cyan-500 { border-color: #06b6d4; }
+    .border-cyan-500\/60 { border-color: rgba(6, 182, 212, 0.6); }
+    .border-cyan-800\/60 { border-color: rgba(21, 94, 117, 0.6); }
+    .border-indigo-700\/80 { border-color: rgba(67, 56, 202, 0.8); }
+    .border-rose-800\/80 { border-color: rgba(159, 18, 57, 0.8); }
+    .border-red-500 { border-color: #ef4444; }
+    .border-red-600 { border-color: #dc2626; }
+    .border-amber-500 { border-color: #f59e0b; }
+    .border-emerald-800 { border-color: #065f46; }
+    .border-white\/20 { border-color: rgba(255, 255, 255, 0.2); }
+    .border-white\/60 { border-color: rgba(255, 255, 255, 0.6); }
+    /* Backgrounds */
+    .bg-transparent { background-color: transparent; }
+    .bg-black { background-color: #000000; }
+    .bg-black\/80 { background-color: rgba(0, 0, 0, 0.8); }
+    .bg-slate-950 { background-color: #020617; }
+    .bg-slate-950\/40 { background-color: rgba(2, 6, 23, 0.4); }
+    .bg-slate-950\/60 { background-color: rgba(2, 6, 23, 0.6); }
+    .bg-slate-900 { background-color: #0f172a; }
+    .bg-slate-900\/60 { background-color: rgba(15, 23, 42, 0.6); }
+    .bg-slate-900\/90 { background-color: rgba(15, 23, 42, 0.9); }
+    .bg-slate-900\/95 { background-color: rgba(15, 23, 42, 0.95); }
+    .bg-slate-800 { background-color: #1e293b; }
+    .bg-slate-800\/40 { background-color: rgba(30, 41, 59, 0.4); }
+    .bg-slate-800\/50 { background-color: rgba(30, 41, 59, 0.5); }
+    .bg-slate-800\/80 { background-color: rgba(30, 41, 59, 0.8); }
+    .bg-cyan-600 { background-color: #0891b2; }
+    .bg-cyan-950\/40 { background-color: rgba(8, 51, 68, 0.4); }
+    .bg-cyan-950\/80 { background-color: rgba(8, 51, 68, 0.8); }
+    .bg-emerald-600 { background-color: #059669; }
+    .bg-emerald-950 { background-color: #022c22; }
+    .bg-amber-600 { background-color: #d97706; }
+    .bg-amber-950\/80 { background-color: rgba(69, 26, 3, 0.8); }
+    .bg-indigo-600 { background-color: #4f46e5; }
+    .bg-indigo-900\/60 { background-color: rgba(49, 46, 129, 0.6); }
+    .bg-rose-600 { background-color: #e11d48; }
+    .bg-rose-950\/60 { background-color: rgba(76, 5, 25, 0.6); }
+    .bg-red-900 { background-color: #7f1d1d; }
+    .bg-red-950\/80 { background-color: rgba(69, 10, 10, 0.8); }
+    .bg-white\/10 { background-color: rgba(255, 255, 255, 0.1); }
+    .bg-gradient-to-tr { background-image: linear-gradient(to top right, #06b6d4, #4f46e5); }
+    .bg-gradient-to-r { background-image: linear-gradient(to right, #06b6d4, #6366f1); }
+    /* Typography */
+    .text-\[10px\] { font-size: 10px; }
+    .text-\[11px\] { font-size: 11px; }
+    .text-xs { font-size: 0.75rem; line-height: 1rem; }
+    .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+    .text-base { font-size: 1rem; line-height: 1.5rem; }
+    .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+    .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+    .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+    .font-normal { font-weight: 400; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .font-bold { font-weight: 700; }
+    .tracking-tight { letter-spacing: -0.025em; }
+    .leading-tight { line-height: 1.25; }
+    .leading-relaxed { line-height: 1.625; }
+    .text-left { text-align: left; }
+    /* Text Colors */
+    .text-white { color: #ffffff; }
+    .text-slate-100 { color: #f1f5f9; }
+    .text-slate-200 { color: #e2e8f0; }
+    .text-slate-300 { color: #cbd5e1; }
+    .text-slate-400 { color: #94a3b8; }
+    .text-slate-500 { color: #64748b; }
+    .text-cyan-200 { color: #a5f3fc; }
+    .text-cyan-300 { color: #67e8f9; }
+    .text-cyan-400 { color: #22d3ee; }
+    .text-emerald-300 { color: #6ee7b7; }
+    .text-emerald-400 { color: #34d399; }
+    .text-amber-300 { color: #fcd34d; }
+    .text-amber-400 { color: #fbbf24; }
+    .text-blue-300 { color: #93c5fd; }
+    .text-indigo-200 { color: #c7d2fe; }
+    .text-rose-300 { color: #fda4af; }
+    .text-rose-400 { color: #fb7185; }
+    .text-red-200 { color: #fecaca; }
+    .text-red-300 { color: #fca5a5; }
+    /* Effects & States */
+    .opacity-0 { opacity: 0; }
+    .opacity-60 { opacity: 0.6; }
+    .opacity-100 { opacity: 1; }
+    .pointer-events-none { pointer-events: none; }
+    .cursor-crosshair { cursor: crosshair; }
+    .touch-none { touch-action: none; }
+    .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+    .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3); }
+    .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4); }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); }
+    .ring-1 { box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.5); }
+    .transition, .transition-all { transition: all 0.15s ease-in-out; }
+    .duration-300 { transition-duration: 300ms; }
+    .duration-500 { transition-duration: 500ms; }
+    .translate-y-\[-10px\] { transform: translateY(-10px); }
+    .translate-y-0 { transform: translateY(0); }
+    .hover\:bg-slate-700:hover { background-color: #334155; }
+    .hover\:bg-slate-700\/60:hover { background-color: rgba(51, 65, 85, 0.6); }
+    .hover\:bg-slate-800:hover { background-color: #1e293b; }
+    .hover\:bg-cyan-500:hover { background-color: #06b6d4; }
+    .hover\:bg-cyan-900\/40:hover { background-color: rgba(22, 78, 99, 0.4); }
+    .hover\:bg-emerald-500:hover { background-color: #10b981; }
+    .hover\:bg-amber-500:hover { background-color: #f59e0b; }
+    .hover\:bg-indigo-800:hover { background-color: #3730a3; }
+    .hover\:bg-rose-500:hover { background-color: #f43f5e; }
+    .hover\:bg-rose-900:hover { background-color: #881337; }
+    .hover\:border-cyan-600:hover { border-color: #0891b2; }
+    .hover\:text-white:hover { color: #ffffff; }
+    .hover\:text-slate-200:hover { color: #e2e8f0; }
+    .hover\:text-cyan-200:hover { color: #a5f3fc; }
+    /* Responsive Media Queries (sm: 640px, md: 768px, lg: 1024px) */
+    @media (min-width: 640px) {
+      .sm\:block { display: block !important; }
+      .sm\:inline { display: inline !important; }
+      .sm\:flex { display: flex !important; }
+      .sm\:px-4 { padding-left: 1rem; padding-right: 1rem; }
+      .sm\:py-2\.5 { padding-top: 0.625rem; padding-bottom: 0.625rem; }
+      .sm\:p-3 { padding: 0.75rem; }
+      .sm\:gap-2 { gap: 0.5rem; }
+      .sm\:gap-3 { gap: 0.75rem; }
+      .sm\:text-base { font-size: 1rem; line-height: 1.5rem; }
+      .sm\:max-h-\[62vh\] { max-height: 62vh; }
+      .sm\:max-w-sm { max-width: 24rem; }
+    }
+    @media (min-width: 768px) {
+      .md\:inline { display: inline !important; }
+      .md\:flex { display: flex !important; }
+    }
+    @media (min-width: 1024px) {
+      .lg\:flex-row { flex-direction: row; }
+      .lg\:w-96 { width: 24rem; }
+      .lg\:h-full { height: 100%; }
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Critical UI Fallback styles so the app works instantly without waiting for Tailwind CDN */
+    .hidden {
+      display: none !important;
+    }
+    /* Pixelated canvas rendering & Touch optimization */
+    #simCanvas {
+      image-rendering: -moz-crisp-edges;
+      image-rendering: -webkit-crisp-edges;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      touch-action: none;
+      -webkit-touch-callout: none;
+      aspect-ratio: 240 / 150;
+      width: 100%;
+      height: auto;
+      max-height: 60vh;
+      display: block;
+      background: #000;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    /* Glow animations */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6)); }
+    }
+    .active-glow {
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+  </style>
 </head>
-<body>
-    <canvas id="canvas"></canvas>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-x-hidden">
 
-    <div id="controls">
-        <div class="control-group">
-            <label>중력 (Gravity): <span id="gravityVal">0.15</span></label>
-            <input type="range" id="gravityInput" min="0" max="1" step="0.05" value="0.15">
-        </div>
-        <div class="control-group">
-            <label>반발 계수 (Elasticity): <span id="elasticityVal">0.40</span></label>
-            <input type="range" id="elasticityInput" min="0" max="1" step="0.05" value="0.40">
-        </div>
-        <div id="info">드래그: 물 생성 | 우클릭: 지우개 | 이동: 바람 효과</div>
+  <!-- Top Navigation Header -->
+  <header class="bg-slate-900 border-b border-slate-800 px-3 py-2 sm:px-4 sm:py-2.5 flex flex-wrap items-center justify-between gap-2 z-20">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 text-lg">
+        ⚗️
+      </div>
+      <div>
+        <h1 class="text-sm sm:text-base font-bold tracking-tight flex items-center gap-2">
+          <span>픽셀 화학 샌드박스</span>
+          <span class="text-xs font-normal text-cyan-400 bg-cyan-950/80 border border-cyan-800/60 px-1.5 py-0.5 rounded">v2.0 ChemSim</span>
+        </h1>
+        <p class="text-[11px] text-slate-400 hidden sm:block">1픽셀 = 1원소 입자 시뮬레이션 | 34종 물질 & 18종 화학/물리 상호작용</p>
+      </div>
     </div>
 
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+    <!-- Central Sim Controls -->
+    <div class="flex items-center gap-1.5 sm:gap-2">
+      <button id="btnPlayPause" class="px-2.5 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs flex items-center gap-1 transition shadow">
+        <span id="playIcon">⏸️</span>
+        <span id="playText" class="hidden sm:inline">일시정지</span>
+      </button>
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+      <button id="btnStep" class="px-2 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs flex items-center gap-1 border border-slate-700 transition" title="1 프레임 진행">
+        <span>⏭️</span>
+        <span class="hidden sm:inline">1스텝</span>
+      </button>
 
-        // 환경 변수 튜닝
-        let gravity = 0.15; // 바닥 밀도 균형을 위해 중력을 살짝 다운
-        let elasticity = 0.40; 
-        const interactionRadius = 40; 
-        const pushStrength = 1.0;     
-        const damping = 0.97;         
+      <div class="flex items-center bg-slate-800 border border-slate-700 rounded-md p-0.5 text-xs text-slate-300">
+        <button id="speed05" class="px-1.5 py-1 rounded hover:bg-slate-700 transition speed-btn" data-speed="0.5">0.5x</button>
+        <button id="speed10" class="px-1.5 py-1 rounded bg-cyan-600 text-white font-medium transition speed-btn" data-speed="1.0">1x</button>
+        <button id="speed20" class="px-1.5 py-1 rounded hover:bg-slate-700 transition speed-btn" data-speed="2.0">2x</button>
+      </div>
 
-        const mouse = {
-            x: -1000,
-            y: -1000,
-            vx: 0,
-            vy: 0,
-            radius: 100,
-            strength: 3.5,
-            isPressed: false
-        };
+      <button id="btnThermal" class="px-2 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 transition flex items-center gap-1" title="열화상 카메라 모드 (온도 시각화)">
+        <span>🌡️</span>
+        <span class="hidden md:inline">열화상</span>
+      </button>
 
-        const gravityInput = document.getElementById('gravityInput');
-        const elasticityInput = document.getElementById('elasticityInput');
-        const gravityVal = document.getElementById('gravityVal');
-        const elasticityVal = document.getElementById('elasticityVal');
+      <button id="btnSound" class="px-2 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs border border-slate-700 transition flex items-center gap-1" title="사운드 켜기/끄기">
+        <span id="soundIcon">🔊</span>
+      </button>
 
-        gravityInput.addEventListener('input', (e) => {
-            gravity = Number(e.target.value);
-            gravityVal.textContent = gravity.toFixed(2);
-        });
+      <button id="btnClear" class="px-2.5 py-1.5 rounded-md bg-rose-950/60 hover:bg-rose-900 border border-rose-800/80 text-rose-300 text-xs flex items-center gap-1 transition">
+        <span>🗑️</span>
+        <span class="hidden sm:inline">초기화</span>
+      </button>
 
-        elasticityInput.addEventListener('input', (e) => {
-            elasticity = Number(e.target.value);
-            elasticityVal.textContent = elasticity.toFixed(2);
-        });
+      <button id="btnOpenCodex" class="px-2.5 py-1.5 rounded-md bg-indigo-900/60 hover:bg-indigo-800 border border-indigo-700/80 text-indigo-200 text-xs font-medium flex items-center gap-1 transition">
+        <span>📖</span>
+        <span>반응 도감</span>
+        <span id="codexProgressBadge" class="bg-indigo-600 text-white text-[10px] px-1 rounded-full font-mono">0/18</span>
+      </button>
+    </div>
+  </header>
 
-        // 마우스 조작 인터페이스 (우클릭 지우개 포함)
-        window.addEventListener('mousedown', (e) => {
-            if (e.target.closest('#controls')) return;
-            
-            if (e.button === 2) { 
-                for (let i = particles.length - 1; i >= 0; i--) {
-                    const dx = particles[i].x - e.clientX;
-                    const dy = particles[i].y - e.clientY;
-                    if (Math.sqrt(dx*dx + dy*dy) < 80) {
-                        particles.splice(i, 1);
-                    }
-                }
-            } else {
-                mouse.isPressed = true;
+  <!-- Experiment Presets Bar -->
+  <div class="bg-slate-900/90 border-b border-slate-800/80 px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto text-xs whitespace-nowrap z-10 scrollbar-none">
+    <span class="text-slate-400 font-medium text-[11px] flex items-center gap-1 shrink-0">
+      <span>🧪</span> 실험 프리셋:
+    </span>
+    <button class="preset-btn px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-900/40 border border-slate-700 hover:border-cyan-600 text-slate-300 hover:text-cyan-200 transition text-[11px]" data-preset="sodium_water">
+      💧 나트륨 물 폭발
+    </button>
+    <button class="preset-btn px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-900/40 border border-slate-700 hover:border-cyan-600 text-slate-300 hover:text-cyan-200 transition text-[11px]" data-preset="thermite">
+      💥 테르밋 반응
+    </button>
+    <button class="preset-btn px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-900/40 border border-slate-700 hover:border-cyan-600 text-slate-300 hover:text-cyan-200 transition text-[11px]" data-preset="electrolysis">
+      ⚡ 물 전기분해 (H₂/O₂)
+    </button>
+    <button class="preset-btn px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-900/40 border border-slate-700 hover:border-cyan-600 text-slate-300 hover:text-cyan-200 transition text-[11px]" data-preset="acid_base">
+      🫧 산-염기 중화 & 발포
+    </button>
+    <button class="preset-btn px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-900/40 border border-slate-700 hover:border-cyan-600 text-slate-300 hover:text-cyan-200 transition text-[11px]" data-preset="oil_fire">
+      🛢️ 기름 화재 & CO₂ 소화
+    </button>
+    <button class="preset-btn px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-900/40 border border-slate-700 hover:border-cyan-600 text-slate-300 hover:text-cyan-200 transition text-[11px]" data-preset="volcano">
+      🌋 화산과 액체질소 급랭
+    </button>
+    <button class="preset-btn px-2.5 py-1 rounded-full bg-slate-800 hover:bg-cyan-900/40 border border-slate-700 hover:border-cyan-600 text-slate-300 hover:text-cyan-200 transition text-[11px]" data-preset="magnesium_flare">
+      ✨ 마그네슘 섬광 연소
+    </button>
+  </div>
+
+  <!-- Main Work Area -->
+  <main class="flex-1 flex flex-col lg:flex-row p-2 sm:p-3 gap-2 sm:gap-3 max-w-[1700px] w-full mx-auto">
+
+    <!-- Canvas Simulation & Inspector Area -->
+    <div class="flex-1 flex flex-col gap-2">
+      <!-- Canvas Wrapper with custom border & aspect ratio -->
+      <div class="relative bg-black rounded-lg border border-slate-800 overflow-hidden shadow-2xl flex items-center justify-center group">
+        <canvas id="simCanvas" width="240" height="150" class="w-full h-auto cursor-crosshair bg-black max-h-[58vh] sm:max-h-[62vh] block touch-none"></canvas>
+
+        <!-- Notification Toast (For Chemical Reactions) -->
+        <div id="reactionToast" class="absolute top-3 right-3 max-w-xs sm:max-w-sm bg-slate-900/95 border border-cyan-500/60 rounded-lg p-2.5 shadow-2xl shadow-cyan-500/20 backdrop-blur-md transform transition-all duration-300 opacity-0 pointer-events-none translate-y-[-10px] flex items-start gap-2.5 z-30">
+          <div id="toastIcon" class="text-xl shrink-0">✨</div>
+          <div class="flex-1 min-w-0">
+            <div id="toastTitle" class="text-xs font-bold text-cyan-300">새로운 화학 반응 발견!</div>
+            <div id="toastDesc" class="text-[11px] text-slate-200 font-mono break-words leading-tight mt-0.5"></div>
+          </div>
+        </div>
+
+        <!-- Mode Overlay Badges -->
+        <div class="absolute bottom-2 left-2 flex items-center gap-1.5 pointer-events-none z-10">
+          <span id="thermalBadge" class="hidden text-[10px] bg-red-950/80 border border-red-500 text-red-300 px-1.5 py-0.5 rounded font-bold backdrop-blur">
+            🌡️ THERMAL CAM
+          </span>
+          <span id="pausedBadge" class="hidden text-[10px] bg-amber-950/80 border border-amber-500 text-amber-300 px-1.5 py-0.5 rounded font-bold backdrop-blur">
+            ⏸️ PAUSED
+          </span>
+        </div>
+
+        <!-- Cursor Size Preview indicator overlay -->
+        <div id="brushCursorCircle" class="absolute pointer-events-none rounded-full border border-white/60 bg-white/10 hidden transform -translate-x-1/2 -translate-y-1/2 z-20"></div>
+      </div>
+
+      <!-- Real-time HUD / Status Bar -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <!-- Left: Inspected Particle Info -->
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5 font-medium">
+            <span class="text-slate-400">포인터 정보:</span>
+            <span id="hudElemSwatch" class="w-3 h-3 rounded-sm inline-block border border-slate-700 bg-transparent"></span>
+            <span id="hudElemName" class="font-bold text-cyan-300">공기 (빈 공간)</span>
+            <span id="hudElemFormula" class="font-mono text-slate-400 text-[11px]"></span>
+          </div>
+          <div class="hidden sm:flex items-center gap-1 text-slate-300 font-mono text-[11px]">
+            <span>온도:</span>
+            <span id="hudTemp" class="text-amber-400 font-semibold">22°C</span>
+          </div>
+          <div class="hidden md:flex items-center gap-1 text-slate-400 font-mono text-[11px]">
+            <span>좌표:</span>
+            <span id="hudCoord">(0, 0)</span>
+          </div>
+        </div>
+
+        <!-- Right: Sim Performance Metrics -->
+        <div class="flex items-center gap-3 font-mono text-[11px] text-slate-400">
+          <div>입자 수: <span id="hudParticles" class="text-slate-200 font-bold">0</span></div>
+          <div>FPS: <span id="hudFps" class="text-emerald-400 font-bold">60</span></div>
+        </div>
+      </div>
+
+      <!-- Quick Draw Tool & Brush Settings Strip -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2.5 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <!-- Tools -->
+        <div class="flex items-center gap-1">
+          <span class="text-slate-400 text-[11px] font-medium mr-1">도구:</span>
+          <button class="tool-btn px-2 py-1 rounded bg-cyan-600 text-white font-medium flex items-center gap-1 transition" data-tool="pen">
+            ✏️ 브러시
+          </button>
+          <button class="tool-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1 transition" data-tool="spray">
+            🚿 분무
+          </button>
+          <button class="tool-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1 transition" data-tool="line">
+            📏 직선
+          </button>
+          <button class="tool-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1 transition" data-tool="fill">
+            🪣 채우기
+          </button>
+          <button class="tool-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1 transition" data-tool="eraser">
+            🧹 지우개
+          </button>
+          <button class="tool-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 flex items-center gap-1 transition" data-tool="heat" title="가열기 (클릭 부위 온도 상승)">
+            🔥 가열기
+          </button>
+          <button class="tool-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-300 flex items-center gap-1 transition" data-tool="cool" title="냉각기 (클릭 부위 온도 하강)">
+            ❄️ 냉각기
+          </button>
+        </div>
+
+        <!-- Brush Sizes -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400 text-[11px] font-medium">크기:</span>
+          <button class="size-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs transition" data-size="1">1</button>
+          <button class="size-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs transition" data-size="2">2</button>
+          <button class="size-btn px-2 py-0.5 rounded bg-cyan-600 text-white font-mono text-xs font-bold transition" data-size="4">4</button>
+          <button class="size-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs transition" data-size="8">8</button>
+          <button class="size-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs transition" data-size="16">16</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Element Selector Palette & Reaction Tracker -->
+    <div class="w-full lg:w-96 flex flex-col gap-2 shrink-0">
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 flex flex-col h-[520px] lg:h-full max-h-[700px]">
+        
+        <!-- Palette Header with Active Element Display -->
+        <div class="flex items-center justify-between pb-2.5 mb-2 border-b border-slate-800">
+          <div>
+            <div class="text-[11px] text-slate-400 font-medium">선택된 원소/물질</div>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span id="activeElemColorDot" class="w-3.5 h-3.5 rounded shadow-sm inline-block border border-white/20"></span>
+              <span id="activeElemName" class="font-bold text-sm text-cyan-300">모래 (Sand)</span>
+              <span id="activeElemFormula" class="font-mono text-xs text-amber-400 font-semibold bg-slate-800 px-1.5 py-0.2 rounded">SiO₂</span>
+            </div>
+          </div>
+          <div id="activeElemState" class="text-xs bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-slate-300 font-medium">
+            분말 (고체)
+          </div>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="flex border-b border-slate-800 gap-1 pb-1 mb-2 text-xs overflow-x-auto scrollbar-none">
+          <button class="cat-tab px-2.5 py-1 rounded-t font-medium text-cyan-400 border-b-2 border-cyan-500 bg-slate-800/50" data-cat="all">전체</button>
+          <button class="cat-tab px-2.5 py-1 rounded-t font-medium text-slate-400 hover:text-slate-200" data-cat="solid">🪨 고체</button>
+          <button class="cat-tab px-2.5 py-1 rounded-t font-medium text-slate-400 hover:text-slate-200" data-cat="liquid">💧 액체</button>
+          <button class="cat-tab px-2.5 py-1 rounded-t font-medium text-slate-400 hover:text-slate-200" data-cat="gas">💨 기체</button>
+          <button class="cat-tab px-2.5 py-1 rounded-t font-medium text-slate-400 hover:text-slate-200" data-cat="reactive">⚡ 반응/에너지</button>
+        </div>
+
+        <!-- Element Grid (Scrollable) -->
+        <div id="elementGrid" class="flex-1 overflow-y-auto pr-1 grid grid-cols-2 gap-1.5 text-xs">
+          <!-- Dynamic element buttons populated by JS -->
+        </div>
+
+        <!-- Element Description Footer -->
+        <div id="elemDescBox" class="mt-2 pt-2 border-t border-slate-800 text-[11px] text-slate-400 min-h-[58px] leading-relaxed bg-slate-950/40 p-2 rounded">
+          <span class="text-cyan-400 font-semibold">설명:</span>
+          <span id="elemDescText">이산화규소(SiO₂) 성분의 일반적인 고체 분말. 쌓이며 흘러내립니다. 1100°C 이상 가열 시 액화되어 식으면 유리가 됩니다.</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Reaction Codex Modal -->
+  <div id="codexModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-5 py-3.5 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📖</span>
+          <div>
+            <h2 class="font-bold text-sm sm:text-base text-slate-100">화학 반응 및 상태 변화 도감 (Reaction Codex)</h2>
+            <p class="text-xs text-slate-400">시뮬레이션에서 상호작용을 발생시켜 18종의 반응을 모두 발견해보세요!</p>
+          </div>
+        </div>
+        <button id="btnCloseCodex" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition text-lg">✕</button>
+      </div>
+
+      <!-- Discovery Counter Progress Bar -->
+      <div class="px-5 py-2.5 bg-slate-900/60 border-b border-slate-800 flex items-center gap-3">
+        <div class="text-xs font-medium text-slate-300 whitespace-nowrap">
+          발견 현황: <span id="modalDiscoveredCount" class="font-mono font-bold text-cyan-400">0</span> / 18
+        </div>
+        <div class="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
+          <div id="modalProgressBar" class="bg-gradient-to-r from-cyan-500 to-indigo-500 h-full rounded-full transition-all duration-500 w-0"></div>
+        </div>
+      </div>
+
+      <!-- Reactions List -->
+      <div id="codexList" class="p-4 overflow-y-auto space-y-2.5 flex-1 divide-y divide-slate-800/60">
+        <!-- Injected via JavaScript -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 border-t border-slate-800 bg-slate-950 flex justify-end">
+        <button id="btnModalCloseAction" class="px-4 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-medium text-xs transition">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear Confirmation Modal -->
+  <div id="clearConfirmModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-sm w-full p-5 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center gap-3 text-rose-400">
+        <span class="text-2xl">🗑️</span>
+        <h3 class="font-bold text-base text-slate-100">캔버스 초기화</h3>
+      </div>
+      <p class="text-xs text-slate-300 leading-relaxed">
+        화면의 모든 입자와 반응을 지우시겠습니까? 진행 중인 실험이 모두 초기화됩니다.
+      </p>
+      <div class="flex justify-end gap-2 text-xs">
+        <button id="btnCancelClear" class="px-3 py-1.5 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium transition">
+          취소
+        </button>
+        <button id="btnConfirmClear" class="px-3 py-1.5 rounded-md bg-rose-600 hover:bg-rose-500 text-white font-medium transition">
+          전체 비우기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       CHEMISTRY SANDBOX SIMULATION ENGINE
+       ========================================================================== */
+
+    // Canvas & Grid Parameters
+    const WIDTH = 240;
+    const HEIGHT = 150;
+    const TOTAL_CELLS = WIDTH * HEIGHT;
+
+    // Simulation Buffers (TypedArrays for ultra-fast 60 FPS performance)
+    const type = new Uint8Array(TOTAL_CELLS);
+    const temp = new Int16Array(TOTAL_CELLS);
+    const varColor = new Uint8Array(TOTAL_CELLS);
+    const life = new Uint8Array(TOTAL_CELLS);
+    const charge = new Uint8Array(TOTAL_CELLS);
+    const updated = new Uint8Array(TOTAL_CELLS);
+    const vx = new Float32Array(TOTAL_CELLS);
+    const vy = new Float32Array(TOTAL_CELLS);
+
+    let frameCount = 1;
+    let isPaused = false;
+    let simSpeed = 1.0;
+    let thermalView = false;
+    let soundEnabled = true;
+
+    // Tool state
+    let currentTool = 'pen'; // 'pen', 'spray', 'line', 'fill', 'eraser', 'heat', 'cool'
+    let brushSize = 4;
+    let activeElemId = 2; // Sand by default
+    let isMouseDown = false;
+    let lastMouseX = -1;
+    let lastMouseY = -1;
+    let lineStartX = -1;
+    let lineStartY = -1;
+
+    // ==========================================================================
+    // AUDIO SYNTHESIS (Web Audio API)
+    // ==========================================================================
+    let audioCtx = null;
+    let masterGain = null;
+
+    function initAudio() {
+      if (audioCtx) return;
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        audioCtx = new AudioContextClass();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = 0.2;
+        masterGain.connect(audioCtx.destination);
+      } catch (e) {
+        console.warn("AudioContext init skipped", e);
+      }
+    }
+
+    function playSound(soundType) {
+      if (!soundEnabled || !audioCtx) return;
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const now = audioCtx.currentTime;
+      try {
+        if (soundType === 'bubble') {
+          // Water bubbling sound
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(350 + Math.random() * 150, now);
+          osc.frequency.exponentialRampToValueAtTime(700 + Math.random() * 200, now + 0.08);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now);
+          osc.stop(now + 0.09);
+        } else if (soundType === 'sizzle') {
+          // Acid or steam sizzle (noise burst)
+          const bufferSize = audioCtx.sampleRate * 0.06;
+          const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
+          const noise = audioCtx.createBufferSource();
+          noise.buffer = buffer;
+          const filter = audioCtx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.value = 2400 + Math.random() * 1000;
+          const gain = audioCtx.createGain();
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          noise.connect(filter);
+          filter.connect(gain);
+          gain.connect(masterGain);
+          noise.start(now);
+        } else if (soundType === 'boom') {
+          // Explosion (sub punch + noise)
+          const osc = audioCtx.createOscillator();
+          const oscGain = audioCtx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(30, now + 0.25);
+          oscGain.gain.setValueAtTime(0.35, now);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+          osc.connect(oscGain);
+          oscGain.connect(masterGain);
+          osc.start(now);
+          osc.stop(now + 0.3);
+
+          // Noise crackle
+          const bufSize = audioCtx.sampleRate * 0.18;
+          const buf = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+          const data = buf.getChannelData(0);
+          for (let i = 0; i < bufSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize * 0.3));
+          }
+          const noise = audioCtx.createBufferSource();
+          noise.buffer = buf;
+          const noiseGain = audioCtx.createGain();
+          noiseGain.gain.setValueAtTime(0.2, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+          noise.connect(noiseGain);
+          noiseGain.connect(masterGain);
+          noise.start(now);
+        } else if (soundType === 'spark') {
+          // Electric spark buzz
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(1200 + Math.random() * 800, now);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          osc.connect(gain);
+          gain.connect(masterGain);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (soundType === 'chime') {
+          // Discovery chime
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc1.type = 'sine';
+          osc2.type = 'sine';
+          osc1.frequency.setValueAtTime(587.33, now); // D5
+          osc1.frequency.setValueAtTime(880, now + 0.1); // A5
+          osc2.frequency.setValueAtTime(1174.66, now + 0.1); // D6
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+          osc1.connect(gain);
+          osc2.connect(gain);
+          gain.connect(masterGain);
+          osc1.start(now);
+          osc2.start(now + 0.1);
+          osc1.stop(now + 0.45);
+          osc2.stop(now + 0.45);
+        }
+      } catch (e) {
+        // Safe fail
+      }
+    }
+
+    // Audio rate-limiting
+    let lastAudioTime = { bubble: 0, sizzle: 0, boom: 0, spark: 0 };
+    function throttleAudio(name, intervalMs) {
+      const now = performance.now();
+      if (now - (lastAudioTime[name] || 0) > intervalMs) {
+        lastAudioTime[name] = now;
+        playSound(name);
+      }
+    }
+
+    // ==========================================================================
+    // ELEMENT DEFINITIONS (35 distinct substances)
+    // ==========================================================================
+    // State of matter constants
+    const STATE_SOLID = 1;
+    const STATE_POWDER = 2;
+    const STATE_LIQUID = 3;
+    const STATE_GAS = 4;
+    const STATE_ENERGY = 5;
+
+    const ELEMENTS = [
+      { id: 0,  name: '공기 (빈 공간)', en: 'Air', formula: '', cat: 'gas', state: STATE_GAS, color: [10, 15, 26], density: 0, desc: '비어 있는 공간입니다.' },
+      { id: 1,  name: '벽 (불침투성)', en: 'Wall', formula: 'Barrier', cat: 'solid', state: STATE_SOLID, color: [110, 120, 135], density: 9999, desc: '부서지지 않는 단단한 차단 벽입니다. 열과 전기가 통하지 않습니다.' },
+      { id: 2,  name: '모래', en: 'Sand', formula: 'SiO₂', cat: 'solid', state: STATE_POWDER, color: [224, 185, 110], density: 50, desc: '이산화규소 고체 분말. 쌓이며 흘러내립니다. 1100°C 이상 가열 시 액화되어 식으면 유리가 됩니다.' },
+      { id: 3,  name: '유리', en: 'Glass', formula: 'SiO₂ Glass', cat: 'solid', state: STATE_SOLID, color: [175, 215, 230], density: 100, desc: '투명하고 산에 부식되지 않는 비결정질 고체. 빛을 통과시킵니다.' },
+      { id: 4,  name: '돌 / 암석', en: 'Stone', formula: 'Rock', cat: 'solid', state: STATE_SOLID, color: [140, 140, 145], density: 120, desc: '견고한 광물 덩어리. 950°C 이상 가열 시 용암으로 녹아내립니다.' },
+      { id: 5,  name: '나무 / 유기물', en: 'Wood', formula: '(C₆H₁₀O₅)n', cat: 'solid', state: STATE_SOLID, color: [142, 85, 45], density: 30, desc: '셀룰로오스 기반의 가연성 유기 고체. 240°C 이상 가열되거나 불에 닿으면 타서 숯/재와 연기를 냅니다.' },
+      { id: 6,  name: '식물 / 잎', en: 'Plant', formula: 'Biomass', cat: 'solid', state: STATE_SOLID, color: [46, 175, 65], density: 25, desc: '물과 CO₂를 만나면 광합성하여 산소(O₂)를 뿜으며 자라납니다. 산과 불에 취약합니다.' },
+      { id: 7,  name: '불 / 화염', en: 'Fire', formula: 'Plasma/Heat', cat: 'reactive', state: STATE_ENERGY, color: [255, 95, 20], density: -10, desc: '600~900°C의 고에너지 플라즈마. 가연성 물질을 태우고 주변 온도를 급격히 높입니다.' },
+      { id: 8,  name: '물', en: 'Water', formula: 'H₂O', cat: 'liquid', state: STATE_LIQUID, color: [35, 130, 240], density: 10, desc: '생명의 근원인 액체. 100°C에서 끓어 수증기가 되고 0°C에서 얼어 얼음이 됩니다. 나트륨과 폭발적으로 반응합니다.' },
+      { id: 9,  name: '얼음', en: 'Ice', formula: 'H₂O Solid', cat: 'solid', state: STATE_SOLID, color: [155, 215, 255], density: 9, desc: '얼어붙은 고체 물. 0°C 초과 시 물로 녹으며 주변의 열을 흡수합니다.' },
+      { id: 10, name: '수증기', en: 'Steam', formula: 'H₂O Gas', cat: 'gas', state: STATE_GAS, color: [195, 215, 240], density: -8, desc: '기화된 물 기체. 가볍게 위로 솟아오르며 95°C 이하로 냉각 시 물방울로 응결됩니다.' },
+      { id: 11, name: '기름 / 탄화수소', en: 'Oil', formula: 'CnH2n+2', cat: 'liquid', state: STATE_LIQUID, color: [145, 120, 45], density: 8, desc: '물보다 가벼워 물 위에 뜹니다(밀도 0.8). 180°C 이상에서 매우 격렬히 타며 검은 연기를 냅니다.' },
+      { id: 12, name: '연기', en: 'Smoke', formula: 'C + CO + CO₂', cat: 'gas', state: STATE_GAS, color: [100, 100, 110], density: -5, desc: '연소의 부산물인 그을음 미립자 및 기체. 상승하며 서서히 공기 중으로 흩어집니다.' },
+      { id: 13, name: '용암 / 마그마', en: 'Lava', formula: 'Molten Rock', cat: 'reactive', state: STATE_LIQUID, color: [255, 60, 0], density: 40, desc: '1100°C 이상의 초고열 액체 암석. 물을 만나면 식어 암석과 수증기를 만듭니다.' },
+      { id: 14, name: '강산', en: 'Acid', formula: 'H₂SO₄/HCl', cat: 'liquid', state: STATE_LIQUID, color: [130, 255, 50], density: 13, desc: 'pH 1 미만의 강산성 액체. 금속과 반응해 수소(H₂)를 발생시키고, 탄산염과 반응해 CO₂를 방출합니다.' },
+      { id: 15, name: '강염기', en: 'Base', formula: 'NaOH/KOH', cat: 'liquid', state: STATE_LIQUID, color: [165, 85, 245], density: 12, desc: 'pH 14의 강염기 액체. 강산과 닿으면 격렬한 중화열을 방출하며 소금물과 수증기를 만듭니다.' },
+      { id: 16, name: '소금', en: 'Salt', formula: 'NaCl', cat: 'solid', state: STATE_POWDER, color: [240, 240, 250], density: 45, desc: '염화나트륨 백색 결정 분말. 물에 닿으면 즉시 녹아 전기가 통하는 소금물이 됩니다.' },
+      { id: 17, name: '소금물', en: 'Saltwater', formula: 'NaCl + H₂O', cat: 'liquid', state: STATE_LIQUID, color: [45, 160, 225], density: 11, desc: '이온이 녹아 전기가 잘 통하는 전해질 용액. 전기 스파크 시 물이 수소와 산소로 전기분해됩니다.' },
+      { id: 18, name: '철 / 전도 금속', en: 'Iron', formula: 'Fe', cat: 'solid', state: STATE_SOLID, color: [170, 175, 185], density: 180, desc: '전기와 열을 잘 전달하는 중금속. 물과 산소에 닿으면 서서히 녹(Rust)이 슬고, 산에 녹습니다.' },
+      { id: 19, name: '녹 / 산화철', en: 'Rust', formula: 'Fe₂O₃', cat: 'solid', state: STATE_POWDER, color: [180, 65, 35], density: 48, desc: '철이 산화된 붉은 분말. 알루미늄 분말과 고온에서 만나면 유명한 테르밋 반응을 일으킵니다.' },
+      { id: 20, name: '알루미늄', en: 'Aluminum', formula: 'Al', cat: 'solid', state: STATE_POWDER, color: [205, 215, 225], density: 46, desc: '가볍고 반응성이 높은 은백색 금속 분말. 녹(산화철)과 섞여 점화되면 테르밋 폭발 반응을 일으킵니다.' },
+      { id: 21, name: '마그네슘', en: 'Magnesium', formula: 'Mg', cat: 'reactive', state: STATE_POWDER, color: [235, 240, 255], density: 47, desc: '점화 시 1800°C 이상의 눈부신 백색 섬광을 내뿜으며 맹렬하게 연소하여 산화마그네슘 백색 재가 됩니다.' },
+      { id: 22, name: '나트륨', en: 'Sodium', formula: 'Na', cat: 'reactive', state: STATE_POWDER, color: [215, 225, 210], density: 42, desc: '물과 접촉하자마자 수소 가스를 뿜어내며 자연 발화하여 폭발하는 극도로 반응성이 큰 알칼리 금속.' },
+      { id: 23, name: '석회석 / 탄산염', en: 'Limestone', formula: 'CaCO₃', cat: 'solid', state: STATE_POWDER, color: [220, 215, 205], density: 49, desc: '탄산칼슘 광물 분말. 산(Acid)과 만나면 격렬하게 탄산 반응을 일으켜 CO₂ 기체 거품을 뿜어냅니다.' },
+      { id: 24, name: '수소 가스', en: 'Hydrogen', formula: 'H₂', cat: 'gas', state: STATE_GAS, color: [160, 210, 255], density: -15, desc: '우주에서 가장 가벼운 기체로 초고속 상승합니다. 산소/불꽃과 만나면 펑 소리와 함께 수증기로 폭명 반응을 합니다.' },
+      { id: 25, name: '산소 가스', en: 'Oxygen', formula: 'O₂', cat: 'gas', state: STATE_GAS, color: [100, 200, 255], density: -6, desc: '연소를 돕는 조연성 기체. 불꽃에 닿으면 화염을 극대화하고 철의 부식을 촉진합니다.' },
+      { id: 26, name: '메탄 / 천연가스', en: 'Methane', formula: 'CH₄', cat: 'gas', state: STATE_GAS, color: [180, 235, 180], density: -9, desc: '가연성 천연가스. 불꽃에 닿으면 깨끗하고 뜨거운 화염과 함께 CO₂ 및 수증기로 연소합니다.' },
+      { id: 27, name: '이산화탄소', en: 'CO2', formula: 'CO₂', cat: 'gas', state: STATE_GAS, color: [135, 145, 160], density: -2, desc: '공기보다 무거워 바닥으로 가라앉는 기체. 산소를 차단하여 불을 질식 소화시킵니다.' },
+      { id: 28, name: '염소 가스', en: 'Chlorine', formula: 'Cl₂', cat: 'gas', state: STATE_GAS, color: [170, 220, 70], density: -3, desc: '황록색의 무겁고 자극적인 독성 기체. 금속을 부식시키고 식물을 파괴합니다.' },
+      { id: 29, name: '화약', en: 'Gunpowder', formula: 'KNO₃+C+S', cat: 'reactive', state: STATE_POWDER, color: [65, 65, 75], density: 52, desc: '초석, 숯, 유황 혼합 분말. 불꽃이나 280°C 이상의 열에 닿으면 고압 폭발과 함께 연기를 뿜어냅니다.' },
+      { id: 30, name: '액체질소', en: 'Liquid N2', formula: 'LN₂ (-196°C)', cat: 'reactive', state: STATE_LIQUID, color: [200, 245, 255], density: 7, desc: '-196°C의 극저온 액체. 닿는 모든 것을 즉시 얼어붙게 만들고 기화하여 차가운 질소 가스가 됩니다.' },
+      { id: 31, name: '전기 스파크', en: 'Spark', formula: 'Electricity', cat: 'reactive', state: STATE_ENERGY, color: [255, 255, 120], density: 0, desc: '전도체(철, 구리, 소금물)를 타고 흐르는 전류. 가연성 기체를 폭발시키고 물을 전기분해합니다.' },
+      { id: 32, name: '우라늄', en: 'Uranium', formula: '²³⁵U', cat: 'reactive', state: STATE_SOLID, color: [85, 240, 110], density: 300, desc: '녹색으로 빛나는 초고밀도 방사성 원소. 지속적으로 열과 미세 전기를 방출합니다.' },
+      { id: 33, name: '재 / 그을음', en: 'Ash', formula: 'Ash', cat: 'solid', state: STATE_POWDER, color: [160, 160, 165], density: 35, desc: '유기물이나 화약 연소 후 남은 고운 회색 분말.' },
+      { id: 34, name: '황 / 유황', en: 'Sulfur', formula: 'S₈', cat: 'solid', state: STATE_POWDER, color: [235, 215, 40], density: 44, desc: '밝은 노란색의 비금속 원소. 불에 닿으면 특유의 푸른 화염을 내며 유독한 아황산 가스를 방출합니다.' },
+      { id: 35, name: '구리', en: 'Copper', formula: 'Cu', cat: 'solid', state: STATE_SOLID, color: [210, 125, 75], density: 190, desc: '최상급의 전기/열 전도성 적갈색 금속. 산과 오랜 반응 시 녹색 녹(탄산구리/녹청)으로 변합니다.' }
+    ];
+
+    // Build lookup table by ID
+    const ELEM_MAP = new Array(256);
+    ELEMENTS.forEach(e => { ELEM_MAP[e.id] = e; });
+
+    // ==========================================================================
+    // REACTION CODEX DEFINITIONS (18 distinct reactions to discover)
+    // ==========================================================================
+    const REACTIONS = [
+      { id: 'sodium_water', icon: '💥', name: '나트륨 격렬 수화 반응', eq: '2Na + 2H₂O → 2NaOH + H₂↑ + 화염/폭발', desc: '나트륨 금속이 물과 만나 폭발적인 반응열과 수소 가스를 내뿜으며 자연발화합니다.' },
+      { id: 'thermite', icon: '💥', name: '테르밋 산화환원 반응', eq: 'Fe₂O₃ + 2Al → 2Fe + Al₂O₃ + 극열(2200°C)', desc: '녹(산화철)과 알루미늄 분말이 고온 점화 시 용융 철을 뿜으며 초고열로 반응합니다.' },
+      { id: 'electrolysis', icon: '⚡', name: '물의 전기분해 반응', eq: '2H₂O (+전기) → 2H₂↑ + O₂↑', desc: '전해질(소금물)에 전류가 흐르면 수소 가스와 산소 가스 방울로 분해됩니다.' },
+      { id: 'h2_explosion', icon: '🔥', name: '수소 폭명기 반응', eq: '2H₂ + O₂ + 불꽃 → 2H₂O (수증기 폭발)', desc: '수소 기체가 불꽃이나 산소와 만나 격렬한 폭음과 함께 수증기로 합성됩니다.' },
+      { id: 'acid_base', icon: '🧪', name: '산-염기 중화 반응', eq: '산(H⁺) + 염기(OH⁻) → 염 + 물 + 중화열', desc: '강산과 강염기가 만나 서로를 중화시키며 발열과 함께 소금물과 김을 생성합니다.' },
+      { id: 'limestone_acid', icon: '🫧', name: '탄산염 산 분해 반응', eq: 'CaCO₃ + 2H⁺ → Ca²⁺ + H₂O + CO₂↑', desc: '석회석(탄산칼슘)에 산이 닿아 부글부글 끓으며 이산화탄소 가스를 방출합니다.' },
+      { id: 'metal_acid', icon: '⚗️', name: '금속의 산 용해 (수소 발생)', eq: 'Fe/Al + 2H⁺ → Fe²⁺ + H₂↑', desc: '철이나 알루미늄 금속이 산에 녹으며 가연성 수소 기체 거품을 방출합니다.' },
+      { id: 'rusting', icon: '⚙️', name: '철의 산화 반응 (녹 발생)', eq: '4Fe + 3O₂ + 6H₂O → 4Fe(OH)₃ → 녹', desc: '철이 수분과 산소의 지속적인 접촉에 의해 산화철(Rust)로 부식됩니다.' },
+      { id: 'methane_combustion', icon: '🔥', name: '메탄 탄화수소 연소', eq: 'CH₄ + 2O₂ → CO₂ + 2H₂O + 열', desc: '천연가스 메탄이 산화되어 이산화탄소와 수증기를 생성하며 연소합니다.' },
+      { id: 'gunpowder_blast', icon: '💥', name: '흑색 화약 폭발 반응', eq: '2KNO₃ + S + 3C → K₂S + N₂↑ + 3CO₂↑', desc: '화약이 점화 시 순간적인 기체 팽창과 충격파, 짙은 연기를 발생시킵니다.' },
+      { id: 'magnesium_flare', icon: '✨', name: '마그네슘 백색 섬광 연소', eq: '2Mg + O₂ → 2MgO (초고열 백색 섬광)', desc: '마그네슘 금속이 점화되어 1800°C 이상의 눈부신 빛을 내며 백색 산화마그네슘 재로 변합니다.' },
+      { id: 'sulfur_burn', icon: '🟡', name: '유황 푸른 불꽃 연소', eq: 'S + O₂ → SO₂ (푸른 불꽃)', desc: '유황이 불에 타며 특유의 신비로운 푸른색 불꽃과 유독 가스를 방출합니다.' },
+      { id: 'photosynthesis', icon: '🌿', name: '식물 광합성 성장 반응', eq: '6CO₂ + 6H₂O → 유기물 + 6O₂↑', desc: '식물이 물과 이산화탄소를 흡수하여 성장하며 맑은 산소(O₂) 기체를 뿜어냅니다.' },
+      { id: 'flash_freeze', icon: '❄️', name: '액체질소 극저온 급랭', eq: '물/용암 + LN₂(-196°C) → 얼음/암석 즉시 동결', desc: '-196°C의 액체질소가 주변의 모든 열을 급격히 앗아가며 순간 동결시킵니다.' },
+      { id: 'vitrification', icon: '🪟', name: '이산화규소 유리화 반응', eq: 'SiO₂(모래) > 1100°C 용융 → 냉각 시 비결정 유리', desc: '모래가 1100°C 이상의 고온에서 녹아내린 후 식어 투명한 고체 유리가 됩니다.' },
+      { id: 'extinguish', icon: '🧯', name: '이산화탄소 질식 소화', eq: '화염 + CO₂ → 산소 차단 및 즉시 진화', desc: '무거운 CO₂ 가스가 공기 중 산소를 차단하여 불꽃을 즉각 꺼뜨립니다.' },
+      { id: 'dissolution', icon: '🧂', name: '소금의 수화 용해 및 재결정', eq: 'NaCl(s) + H₂O ⇌ NaCl(aq)', desc: '소금이 물에 빠르게 용해되어 전해질 용액이 되고, 가열 증발 시 소금 결정으로 남습니다.' },
+      { id: 'nuclear_heat', icon: '☢️', name: '우라늄 방사성 붕괴열', eq: '²³⁵U 붕괴 → α/β 방출 + 지속적 자체 발열', desc: '고밀도 우라늄이 자체 붕괴하면서 주변으로 지속적인 열과 미세 전기 자극을 전파합니다.' }
+    ];
+
+    const discoveredReactions = new Set();
+    try {
+      const saved = localStorage.getItem('chemsim_discovered');
+      if (saved) {
+        JSON.parse(saved).forEach(id => discoveredReactions.add(id));
+      }
+    } catch (e) {}
+
+    function triggerReaction(reactionId) {
+      if (!discoveredReactions.has(reactionId)) {
+        discoveredReactions.add(reactionId);
+        try {
+          localStorage.setItem('chemsim_discovered', JSON.stringify(Array.from(discoveredReactions)));
+        } catch (e) {}
+
+        const r = REACTIONS.find(x => x.id === reactionId);
+        if (r) {
+          showReactionToast(r);
+          playSound('chime');
+          updateCodexProgressUI();
+        }
+      }
+    }
+
+    function showReactionToast(r) {
+      const toast = document.getElementById('reactionToast');
+      const icon = document.getElementById('toastIcon');
+      const title = document.getElementById('toastTitle');
+      const desc = document.getElementById('toastDesc');
+
+      icon.textContent = r.icon;
+      title.textContent = `새 반응 발견: ${r.name}`;
+      desc.textContent = r.eq;
+
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-[-10px]');
+      toast.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(toast.timeoutId);
+      toast.timeoutId = setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-[-10px]');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 4200);
+    }
+
+    function updateCodexProgressUI() {
+      const count = discoveredReactions.size;
+      const total = REACTIONS.length;
+      const pct = Math.round((count / total) * 100);
+
+      document.getElementById('codexProgressBadge').textContent = `${count}/${total}`;
+      document.getElementById('modalDiscoveredCount').textContent = count;
+      document.getElementById('modalProgressBar').style.width = `${pct}%`;
+
+      renderCodexList();
+    }
+
+    function renderCodexList() {
+      const list = document.getElementById('codexList');
+      list.innerHTML = '';
+
+      REACTIONS.forEach(r => {
+        const isUnlocked = discoveredReactions.has(r.id);
+        const item = document.createElement('div');
+        item.className = `p-3 rounded-lg border transition ${isUnlocked ? 'bg-slate-800/80 border-cyan-800/60' : 'bg-slate-950/60 border-slate-800 opacity-60'}`;
+
+        item.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xl">${isUnlocked ? r.icon : '❓'}</span>
+              <div>
+                <h4 class="text-xs font-bold ${isUnlocked ? 'text-cyan-300' : 'text-slate-400'}">${isUnlocked ? r.name : '미지의 화학 반응'}</h4>
+                <div class="text-[11px] font-mono mt-0.5 ${isUnlocked ? 'text-amber-300' : 'text-slate-500'}">${isUnlocked ? r.eq : '??? → ???'}</div>
+              </div>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded font-medium ${isUnlocked ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-slate-800 text-slate-500'}">
+              ${isUnlocked ? '발견 완료' : '미발견'}
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+            ${isUnlocked ? r.desc : '원소들을 다양하게 조합하고 온도를 조절하여 이 반응을 발생시켜보세요.'}
+          </p>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // ==========================================================================
+    // INITIALIZATION & GRID UTILITIES
+    // ==========================================================================
+    function initGrid() {
+      type.fill(0);
+      temp.fill(22); // Room temperature 22°C
+      varColor.fill(0);
+      life.fill(0);
+      charge.fill(0);
+      updated.fill(0);
+      vx.fill(0);
+      vy.fill(0);
+
+      // Initialize random atmospheric noise for subtle Brownian air shimmer
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        varColor[i] = (Math.random() * 16) | 0;
+      }
+
+      // Create initial outer container walls on boundary
+      for (let x = 0; x < WIDTH; x++) {
+        setPixel(x, 0, 1, 22);
+        setPixel(x, HEIGHT - 1, 1, 22);
+      }
+      for (let y = 0; y < HEIGHT; y++) {
+        setPixel(0, y, 1, 22);
+        setPixel(WIDTH - 1, y, 1, 22);
+      }
+
+      // Seed a sparse ambient atmosphere (trace O2 & CO2 molecules) for Brownian air motion
+      for (let y = 5; y < HEIGHT - 20; y += 8) {
+        for (let x = 8; x < WIDTH - 8; x += 12) {
+          if (Math.random() < 0.35) {
+            const rx = x + (((Math.random() * 5) | 0) - 2);
+            const ry = y + (((Math.random() * 5) | 0) - 2);
+            if (type[ry * WIDTH + rx] === 0) {
+              setPixel(rx, ry, (Math.random() < 0.85) ? 25 : 27, 22);
             }
-        });
+          }
+        }
+      }
+    }
 
-        window.addEventListener('mouseup', () => { mouse.isPressed = false; });
-        window.addEventListener('contextmenu', e => e.preventDefault()); // 우클릭 메뉴 차단
+    function setPixel(x, y, elemId, initTemp = null) {
+      if (x < 0 || x >= WIDTH || y < 0 || y >= HEIGHT) return;
+      const idx = y * WIDTH + x;
+      type[idx] = elemId;
+      varColor[idx] = (Math.random() * 16) | 0;
+      life[idx] = 0;
+      charge[idx] = 0;
+      vx[idx] = 0;
+      vy[idx] = 0;
+      if (initTemp !== null) {
+        temp[idx] = initTemp;
+      } else {
+        // Default temperatures for certain special elements
+        if (elemId === 0) temp[idx] = 22;
+        else if (elemId === 7) temp[idx] = 680; // Fire
+        else if (elemId === 13) temp[idx] = 1150; // Lava
+        else if (elemId === 9) temp[idx] = -10; // Ice
+        else if (elemId === 30) temp[idx] = -196; // LN2
+        else if (elemId === 10) temp[idx] = 105; // Steam
+        else temp[idx] = 22;
+      }
+    }
 
-        window.addEventListener('mousemove', (e) => {
-            mouse.vx = e.clientX - mouse.x;
-            mouse.vy = e.clientY - mouse.y;
-            mouse.x = e.clientX;
-            mouse.y = e.clientY;
-        });
+    // Fast inline swap of two cells (including kinetic velocity vx, vy)
+    function swap(i1, i2) {
+      const t1 = type[i1];
+      const te1 = temp[i1];
+      const v1 = varColor[i1];
+      const l1 = life[i1];
+      const c1 = charge[i1];
+      const vx1 = vx[i1];
+      const vy1 = vy[i1];
 
-        class Particle {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.radius = 5; 
-                
-                // 일렁이는 네온 느낌의 HSL 컬러링
-                const blueHue = Math.floor(Math.random() * 30) + 190;
-                this.color = `hsl(${blueHue}, 90%, 60%)`;
-                
-                this.vx = (Math.random() - 0.5) * 4;
-                this.vy = (Math.random() - 0.5) * 4;
+      type[i1] = type[i2];
+      temp[i1] = temp[i2];
+      varColor[i1] = varColor[i2];
+      life[i1] = life[i2];
+      charge[i1] = charge[i2];
+      vx[i1] = vx[i2];
+      vy[i1] = vy[i2];
+
+      type[i2] = t1;
+      temp[i2] = te1;
+      varColor[i2] = v1;
+      life[i2] = l1;
+      charge[i2] = c1;
+      vx[i2] = vx1;
+      vy[i2] = vy1;
+
+      updated[i1] = frameCount;
+      updated[i2] = frameCount;
+    }
+
+    // ==========================================================================
+    // SIMULATION UPDATE LOOP
+    // ==========================================================================
+    function stepSimulation() {
+      frameCount = (frameCount + 1) & 0xFF;
+      if (frameCount === 0) frameCount = 1;
+
+      // Global atmospheric cooling & Brownian air shimmer pass (cools hot air so fire doesn't re-ignite forever)
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        const ct = temp[i];
+        if (ct > 22) {
+          const coolRate = (type[i] === 0) ? Math.max(2, (ct - 22) >> 3) : Math.max(1, (ct - 22) >> 6);
+          temp[i] = Math.max(22, ct - coolRate);
+        } else if (ct < 22) {
+          const warmRate = (type[i] === 0) ? Math.max(2, (22 - ct) >> 3) : ((Math.random() < 0.1) ? 1 : 0);
+          temp[i] = Math.min(22, ct + warmRate);
+        }
+        // Subtle atmospheric Brownian fluctuation on empty air cells
+        if (type[i] === 0 && Math.random() < 0.015) {
+          varColor[i] = (varColor[i] + 1) & 15;
+        }
+      }
+
+      const leftFirst = (frameCount % 2 === 0);
+
+      // Process bottom-up for powders, liquids, gases, and ballistic particles
+      for (let y = HEIGHT - 2; y >= 1; y--) {
+        const xStart = leftFirst ? 1 : WIDTH - 2;
+        const xEnd = leftFirst ? WIDTH - 1 : 0;
+        const xStep = leftFirst ? 1 : -1;
+
+        for (let x = xStart; x !== xEnd; x += xStep) {
+          const idx = y * WIDTH + x;
+          const t = type[idx];
+          if (t === 0 || updated[idx] === frameCount) continue;
+
+          const elem = ELEM_MAP[t];
+          if (!elem) continue;
+
+          // -------------------------------------------------------------
+          // 0. BALLISTIC KINETICS (Explosion shockwave & thrown particles)
+          // -------------------------------------------------------------
+          if (t !== 1 && (Math.abs(vx[idx]) > 0.18 || Math.abs(vy[idx]) > 0.18)) {
+            if (updateBallisticMotion(x, y, idx, t, elem)) {
+              continue;
             }
+          }
 
-            applyFluidForces(particles) {
-                // 1. 다른 입자들 간의 밀침과 점성
-                for (let other of particles) {
-                    if (other === this) continue;
+          // -------------------------------------------------------------
+          // 1. THERMAL CONDUCTION & PHASE TRANSITIONS
+          // -------------------------------------------------------------
+          let curTemp = temp[idx];
 
-                    const dx = other.x - this.x;
-                    const dy = other.y - this.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist < interactionRadius && dist > 0) {
-                        const overlap = (1 - dist / interactionRadius);
-                        const force = overlap * overlap * pushStrength;
-
-                        const normalX = dx / dist;
-                        const normalY = dy / dist;
-
-                        this.vx -= normalX * force;
-                        this.vy -= normalY * force;
-
-                        this.vx += (other.vx - this.vx) * 0.04;
-                        this.vy += (other.vy - this.vy) * 0.04;
-                    }
-                }
-
-                // 💡 [핵심] 2. 바닥 경계선 압력 필드 (바닥 찰붙음 방지)
-                const floorDist = canvas.height - this.y;
-                const boundaryRadius = 50; // 바닥 위 50px 영역부터 밀어 올림
-                if (floorDist < boundaryRadius && floorDist > 0) {
-                    const floorOverlap = (1 - floorDist / boundaryRadius);
-                    // 바닥에 가까워질수록 위쪽(-vy)으로 가하는 척력을 급격하게 강화
-                    this.vy -= floorOverlap * floorOverlap * 1.5; 
-                }
+          // Special radiation / internal heat
+          if (t === 32) { // Uranium: emits internal heat & sparks
+            temp[idx] = Math.max(curTemp, 85);
+            triggerReaction('nuclear_heat');
+            if (Math.random() < 0.005) {
+              const rx = x + ((Math.random() * 3) | 0) - 1;
+              const ry = y + ((Math.random() * 3) | 0) - 1;
+              const nidx = ry * WIDTH + rx;
+              if (type[nidx] === 0) {
+                setPixel(rx, ry, 31, 200); // Spark
+              }
             }
+          }
 
-            applyWind(mouse) {
-                if (mouse.isPressed) return; 
+          // Phase Changes
+          if (t === 8 && curTemp >= 100) { // Water -> Steam
+            type[idx] = 10;
+            life[idx] = 0;
+            throttleAudio('sizzle', 400);
+            continue;
+          } else if (t === 8 && curTemp <= 0) { // Water -> Ice
+            type[idx] = 9;
+            continue;
+          } else if (t === 9 && curTemp > 0) { // Ice -> Water
+            type[idx] = 8;
+            continue;
+          } else if (t === 10 && curTemp < 90 && Math.random() < 0.08) { // Steam -> Water
+            type[idx] = 8;
+            life[idx] = 0;
+            continue;
+          } else if (t === 2 && curTemp > 1100) { // Sand -> Molten Glass (Lava state)
+            type[idx] = 13;
+            triggerReaction('vitrification');
+            continue;
+          } else if (t === 13 && curTemp < 650) { // Lava cooled -> Stone / Glass
+            type[idx] = (Math.random() < 0.3) ? 3 : 4;
+            continue;
+          } else if (t === 17 && curTemp >= 100) { // Saltwater boils -> Steam leaving Salt
+            type[idx] = 16;
+            if (type[idx - WIDTH] === 0) setPixel(x, y - 1, 10, curTemp);
+            triggerReaction('dissolution');
+            throttleAudio('sizzle', 350);
+            continue;
+          } else if (t === 30 && curTemp > -140) { // Liquid N2 evaporates into cold atmosphere
+            type[idx] = 0;
+            temp[idx] = -60;
+            continue;
+          }
 
-                const dx = this.x - mouse.x;
-                const dy = this.y - mouse.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+          // -------------------------------------------------------------
+          // 2. CHEMICAL INTERACTIONS WITH ADJACENT NEIGHBORS
+          // -------------------------------------------------------------
+          if (interactNeighbors(x, y, idx, t)) {
+            continue;
+          }
 
-                if (dist < mouse.radius && dist > 0) {
-                    const force = (1 - dist / mouse.radius) * mouse.strength;
-                    const normalX = dx / dist;
-                    const normalY = dy / dist;
+          // -------------------------------------------------------------
+          // 3. STATE PHYSICS + BROWNIAN MOTION (Powder, Liquid, Gas, Energy)
+          // -------------------------------------------------------------
+          if (elem.state === STATE_POWDER) {
+            updatePowder(x, y, idx, t, elem);
+          } else if (elem.state === STATE_LIQUID) {
+            updateLiquid(x, y, idx, t, elem);
+          } else if (elem.state === STATE_GAS) {
+            updateGas(x, y, idx, t, elem);
+          } else if (elem.state === STATE_ENERGY) {
+            updateEnergy(x, y, idx, t, elem);
+          } else if (elem.state === STATE_SOLID) {
+            updateSolid(x, y, idx, t, elem);
+          }
+        }
+      }
+    }
 
-                    this.vx += normalX * force;
-                    this.vy += normalY * force;
-                    this.vx += mouse.vx * 0.03;
-                    this.vy += mouse.vy * 0.03;
-                }
-            }
+    // --- Ballistic Kinematics (Particles flying from explosion shockwaves) ---
+    function updateBallisticMotion(x, y, idx, t, elem) {
+      // Apply gravity (gases are buoyant, heavier particles fall in parabolic arcs)
+      if (elem.state === STATE_GAS || elem.state === STATE_ENERGY) {
+        vy[idx] -= 0.04;
+        vx[idx] *= 0.88;
+        vy[idx] *= 0.88;
+      } else {
+        vy[idx] += 0.24; // Gravity
+        vx[idx] *= 0.95; // Air drag
+        vy[idx] *= 0.95;
+      }
 
-            update() {
-                this.vy += gravity;
-                this.vx *= damping;
-                this.vy *= damping;
+      // Add slight atmospheric Brownian turbulence during flight
+      vx[idx] += (Math.random() - 0.5) * 0.12;
 
-                this.x += this.vx;
-                this.y += this.vy;
+      const speed = Math.hypot(vx[idx], vy[idx]);
+      if (speed < 0.2) {
+        vx[idx] = 0;
+        vy[idx] = 0;
+        return false;
+      }
 
-                // 단단한 물리적 경계 충돌 처리
-                if (this.y + this.radius > canvas.height) {
-                    this.y = canvas.height - this.radius;
-                    this.vy = -Math.abs(this.vy) * elasticity;
-                    this.vx *= 0.85; 
-                }
-                if (this.x + this.radius > canvas.width) {
-                    this.x = canvas.width - this.radius;
-                    this.vx = -Math.abs(this.vx) * elasticity;
-                }
-                if (this.x - this.radius < 0) {
-                    this.x = this.radius;
-                    this.vx = Math.abs(this.vx) * elasticity;
-                }
-            }
+      const steps = Math.min(6, Math.max(1, Math.ceil(speed)));
+      const stepX = vx[idx] / steps;
+      const stepY = vy[idx] / steps;
 
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = this.color;
-                ctx.fill();
-                ctx.closePath();
-            }
+      let curX = x;
+      let curY = y;
+      let curIdx = idx;
+      let moved = false;
+
+      for (let s = 1; s <= steps; s++) {
+        const nx = Math.round(x + stepX * s);
+        const ny = Math.round(y + stepY * s);
+
+        if (nx <= 0 || nx >= WIDTH - 1 || ny <= 0 || ny >= HEIGHT - 1) {
+          // Bounce off boundary wall
+          vx[curIdx] *= -0.4;
+          vy[curIdx] *= -0.4;
+          break;
         }
 
-        const particles = [];
-        const MAX_PARTICLES = 2500; 
+        const nidx = ny * WIDTH + nx;
+        if (nidx === curIdx) continue;
 
-        function animate() {
-            // 💡 잔상 효과의 핵심: 투명도가 있는 배경색으로 덮어 씌우기
-            ctx.fillStyle = 'rgba(5, 5, 8, 0.2)'; 
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const nt = type[nidx];
+        const nelem = ELEM_MAP[nt];
 
-            if (mouse.isPressed && particles.length < MAX_PARTICLES) {
-                for(let i = 0; i < 4; i++) {
-                    const offsetX = (Math.random() - 0.5) * 15;
-                    const offsetY = (Math.random() - 0.5) * 15;
-                    particles.push(new Particle(mouse.x + offsetX, mouse.y + offsetY));
-                }
-            }
+        // Can fly through empty air or displace gases/fire
+        if (nt === 0 || (nelem && (nelem.state === STATE_GAS || nelem.state === STATE_ENERGY) && elem.state !== STATE_GAS)) {
+          swap(curIdx, nidx);
+          curIdx = nidx;
+          curX = nx;
+          curY = ny;
+          moved = true;
+        } else if (nt === 1) {
+          // Hit indestructible wall: bounce
+          vx[curIdx] *= -0.35;
+          vy[curIdx] *= -0.35;
+          break;
+        } else {
+          // Collided with another particle: transfer kinetic momentum!
+          vx[nidx] += vx[curIdx] * 0.55 + (Math.random() - 0.5) * 0.8;
+          vy[nidx] += vy[curIdx] * 0.55 - Math.random() * 0.5;
+          vx[curIdx] *= -0.25;
+          vy[curIdx] *= -0.25;
+          break;
+        }
+      }
 
-            particles.forEach(p => {
-                p.applyFluidForces(particles);
-                p.applyWind(mouse);
-            });
+      return moved;
+    }
 
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.update();
-                p.draw();
+    // --- Powder Physics (Falling sand + Brownian jitter in fluids/air) ---
+    function updatePowder(x, y, idx, t, elem) {
+      // Atmospheric / thermal Brownian micro-jitter while falling or submerged
+      const down = idx + WIDTH;
+      const downT = type[down];
 
-                if (p.y > canvas.height + 20 || p.x < -20 || p.x > canvas.width + 20) {
-                    particles.splice(i, 1);
-                }
-            }
+      // If in air or liquid, apply slight horizontal Brownian drift
+      if ((downT === 0 || (ELEM_MAP[downT] && ELEM_MAP[downT].state === STATE_LIQUID)) && Math.random() < 0.22) {
+        const bDir = (Math.random() < 0.5) ? -1 : 1;
+        const bx = x + bDir;
+        if (bx > 0 && bx < WIDTH - 1) {
+          const bIdx = idx + bDir;
+          if (type[bIdx] === 0 || (ELEM_MAP[type[bIdx]] && ELEM_MAP[type[bIdx]].state === STATE_LIQUID)) {
+            swap(idx, bIdx);
+            return;
+          }
+        }
+      }
 
-            requestAnimationFrame(animate);
+      // Free fall down through air, gases, or lighter fluids
+      if (downT === 0 || (ELEM_MAP[downT] && (ELEM_MAP[downT].state === STATE_GAS || (ELEM_MAP[downT].state === STATE_LIQUID && elem.density > ELEM_MAP[downT].density)))) {
+        // In liquid, powders sink slightly slower with Brownian suspension
+        if (ELEM_MAP[downT] && ELEM_MAP[downT].state === STATE_LIQUID && Math.random() < 0.35) {
+          return;
+        }
+        swap(idx, down);
+        return;
+      }
+
+      // Diagonal slide
+      const dir = (Math.random() < 0.5) ? -1 : 1;
+      const dl = down - 1;
+      const dr = down + 1;
+      const firstD = (dir === -1) ? dl : dr;
+      const secondD = (dir === -1) ? dr : dl;
+      const firstX = x + dir;
+      const secondX = x - dir;
+
+      if (firstX > 0 && firstX < WIDTH - 1) {
+        const ft = type[firstD];
+        if (ft === 0 || (ELEM_MAP[ft] && (ELEM_MAP[ft].state === STATE_GAS || (ELEM_MAP[ft].state === STATE_LIQUID && elem.density > ELEM_MAP[ft].density)))) {
+          swap(idx, firstD);
+          return;
+        }
+      }
+      if (secondX > 0 && secondX < WIDTH - 1) {
+        const st = type[secondD];
+        if (st === 0 || (ELEM_MAP[st] && (ELEM_MAP[st].state === STATE_GAS || (ELEM_MAP[st].state === STATE_LIQUID && elem.density > ELEM_MAP[st].density)))) {
+          swap(idx, secondD);
+          return;
+        }
+      }
+    }
+
+    // --- Liquid Physics (Fast leveling + Brownian molecular diffusion) ---
+    function updateLiquid(x, y, idx, t, elem) {
+      const down = idx + WIDTH;
+      const downT = type[down];
+
+      // Fall straight down through air, gas, or lighter liquid
+      if (downT === 0 || (ELEM_MAP[downT] && (ELEM_MAP[downT].state === STATE_GAS || (ELEM_MAP[downT].state === STATE_LIQUID && elem.density > ELEM_MAP[downT].density)))) {
+        swap(idx, down);
+        return;
+      }
+
+      // Slide diagonally down
+      const dir = (Math.random() < 0.5) ? -1 : 1;
+      for (let d of [dir, -dir]) {
+        const tx = x + d;
+        if (tx > 0 && tx < WIDTH - 1) {
+          const diagIdx = down + d;
+          const dt = type[diagIdx];
+          if (dt === 0 || (ELEM_MAP[dt] && (ELEM_MAP[dt].state === STATE_GAS || (ELEM_MAP[dt].state === STATE_LIQUID && elem.density > ELEM_MAP[dt].density)))) {
+            swap(idx, diagIdx);
+            return;
+          }
+        }
+      }
+
+      // Brownian internal molecular motion (subtle colour shimmer & mixing with miscible neighbors)
+      if (Math.random() < 0.08) {
+        const rx = x + (((Math.random() * 3) | 0) - 1);
+        const ry = y + (((Math.random() * 3) | 0) - 1);
+        if (rx > 0 && rx < WIDTH - 1 && ry > 0 && ry < HEIGHT - 1) {
+          const nidx = ry * WIDTH + rx;
+          const nt = type[nidx];
+          if (nt === t || (ELEM_MAP[nt] && ELEM_MAP[nt].state === STATE_LIQUID && Math.abs(elem.density - ELEM_MAP[nt].density) <= 2)) {
+            swap(idx, nidx);
+            return;
+          }
+        }
+      }
+
+      // Multi-pixel horizontal dispersion so liquids flatten smoothly
+      for (let d of [dir, -dir]) {
+        for (let step = 1; step <= 3; step++) {
+          const tx = x + d * step;
+          if (tx <= 0 || tx >= WIDTH - 1) break;
+          const sideIdx = idx + d * step;
+          const st = type[sideIdx];
+          if (st === 0 || (ELEM_MAP[st] && (ELEM_MAP[st].state === STATE_GAS || (ELEM_MAP[st].state === STATE_LIQUID && elem.density > ELEM_MAP[st].density)))) {
+            swap(idx, sideIdx);
+            return;
+          } else if (st !== t) {
+            break;
+          }
+        }
+      }
+    }
+
+    // --- Gas Physics (Buoyancy + True 2D Brownian Motion & Atmospheric Diffusion) ---
+    function updateGas(x, y, idx, t, elem) {
+      // Lifespan & natural atmospheric dispersion for transient gases (Steam 10, Smoke 12)
+      if (t === 10 || t === 12) {
+        life[idx]++;
+        const maxLife = (t === 10) ? 140 : 120;
+        if (life[idx] > maxLife || (y <= 3 && Math.random() < 0.12)) {
+          if (t === 10 && temp[idx] < 85 && Math.random() < 0.15) {
+            type[idx] = 8; // Condenses back into a tiny water droplet
+          } else {
+            type[idx] = 0; // Disperses into atmosphere
+          }
+          life[idx] = 0;
+          return;
+        }
+      }
+
+      // True Brownian Motion (열운동에 의한 무작위 분자 진동 및 확산)
+      // Gases have a vertical buoyancy bias, but constantly jitter in 2D (-1, 0, +1)
+      const isHeavyGas = (t === 27 || t === 28); // CO2, Chlorine are denser than air
+      const isUltraLight = (t === 24); // Hydrogen rises faster
+
+      // Determine dy with Brownian thermal fluctuation:
+      // Even rising gases occasionally jitter downward or sideways due to molecular collisions!
+      let dy = 0;
+      const rY = Math.random();
+      if (isHeavyGas) {
+        dy = (rY < 0.52) ? 1 : (rY < 0.78 ? 0 : -1);
+      } else if (isUltraLight) {
+        dy = (rY < 0.68) ? -1 : (rY < 0.88 ? 0 : 1);
+      } else {
+        dy = (rY < 0.50) ? -1 : (rY < 0.78 ? 0 : 1);
+      }
+
+      // Horizontal Brownian walk (-1, 0, +1, or +/-2 at high temperature)
+      const thermalBoost = (temp[idx] > 100) ? 2 : 1;
+      const dx = (((Math.random() * 3) | 0) - 1) * ((Math.random() < 0.25) ? thermalBoost : 1);
+
+      const nx = x + dx;
+      const ny = y + dy;
+
+      if (nx > 0 && nx < WIDTH - 1 && ny > 0 && ny < HEIGHT - 1) {
+        const targetIdx = ny * WIDTH + nx;
+        const targetT = type[targetIdx];
+        // Move into empty air OR diffuse by swapping with another gas molecule (Brownian gas mixing!)
+        if (targetT === 0 || (ELEM_MAP[targetT] && ELEM_MAP[targetT].state === STATE_GAS && targetT !== t && Math.random() < 0.35)) {
+          swap(idx, targetIdx);
+          return;
+        }
+      }
+
+      // Secondary fallback: pure random 8-way Brownian step if primary direction was blocked
+      const bDx = ((Math.random() * 3) | 0) - 1;
+      const bDy = ((Math.random() * 3) | 0) - 1;
+      const bx = x + bDx;
+      const by = y + bDy;
+      if (bx > 0 && bx < WIDTH - 1 && by > 0 && by < HEIGHT - 1) {
+        const bIdx = by * WIDTH + bx;
+        const bt = type[bIdx];
+        if (bt === 0 || (ELEM_MAP[bt] && ELEM_MAP[bt].state === STATE_GAS && bt !== t && Math.random() < 0.3)) {
+          swap(idx, bIdx);
+        }
+      }
+    }
+
+    // --- Energy / Plasma Physics (Fire, Spark) ---
+    function updateEnergy(x, y, idx, t, elem) {
+      if (t === 7) { // Fire: rises, flickers via Brownian turbulence, and extinguishes naturally!
+        life[idx] += 1 + ((Math.random() * 2) | 0);
+        temp[idx] -= 22;
+
+        // Fire extinguishes when its short lifespan ends or it cools down
+        if (life[idx] > 20 + ((Math.random() * 12) | 0) || temp[idx] < 200 || y <= 2) {
+          // 92% vanishes cleanly into warm air, only 8% leaves a tiny wisp of smoke
+          if (Math.random() < 0.08) {
+            type[idx] = 12; // Smoke
+            life[idx] = 60;
+            temp[idx] = 50;
+          } else {
+            type[idx] = 0;  // Cleanly disappears!
+            life[idx] = 0;
+            temp[idx] = 35;
+          }
+          return;
         }
 
-        animate();
-    </script>
+        // Fire MOVES (swaps) upward with Brownian flicker — NEVER clones itself into empty air!
+        const dx = ((Math.random() * 3) | 0) - 1;
+        const dy = (Math.random() < 0.82) ? -1 : 0;
+        const nx = x + dx;
+        const ny = y + dy;
+
+        if (nx > 0 && nx < WIDTH - 1 && ny > 0 && ny < HEIGHT - 1) {
+          const nidx = ny * WIDTH + nx;
+          if (type[nidx] === 0) {
+            swap(idx, nidx);
+          }
+        }
+      } else if (t === 31) { // Spark / Electricity
+        life[idx]++;
+        const neighbors = [idx - 1, idx + 1, idx - WIDTH, idx + WIDTH];
+        for (let ni of neighbors) {
+          if (ni < 0 || ni >= TOTAL_CELLS) continue;
+          const nt = type[ni];
+          // Conducts into Iron (18), Copper (35), Saltwater (17), Aluminum (20)
+          if ((nt === 18 || nt === 35 || nt === 17 || nt === 20) && charge[ni] === 0) {
+            charge[ni] = 1;
+            temp[ni] += 6;
+            throttleAudio('spark', 250);
+
+            // Water Electrolysis: in Saltwater (17), Spark splits water into H2 (24) and O2 (25)!
+            if (nt === 17 && Math.random() < 0.25) {
+              triggerReaction('electrolysis');
+              throttleAudio('bubble', 180);
+              const upIdx = ni - WIDTH;
+              if (upIdx > 0 && type[upIdx] === 0) {
+                type[upIdx] = (Math.random() < 0.66) ? 24 : 25; // 2:1 H2:O2 ratio!
+                temp[upIdx] = 28;
+              }
+            }
+          }
+        }
+
+        if (life[idx] > 3) {
+          type[idx] = 0;
+          charge[idx] = 0;
+          temp[idx] = 25;
+        }
+      }
+    }
+
+    // --- Solid update (Plant growth, rust spreading) ---
+    function updateSolid(x, y, idx, t, elem) {
+      if (t === 6) { // Plant
+        const neighbors = [idx - 1, idx + 1, idx - WIDTH, idx + WIDTH];
+        let hasWater = false;
+        let co2Idx = -1;
+
+        for (let ni of neighbors) {
+          if (ni < 0 || ni >= TOTAL_CELLS) continue;
+          if (type[ni] === 8) hasWater = true;
+          if (type[ni] === 27) co2Idx = ni;
+        }
+
+        if (hasWater && Math.random() < 0.04) {
+          const emptyNeighbors = neighbors.filter(ni => ni > 0 && ni < TOTAL_CELLS && type[ni] === 0);
+          if (emptyNeighbors.length > 0) {
+            const growTarget = emptyNeighbors[(Math.random() * emptyNeighbors.length) | 0];
+            type[growTarget] = 6;
+            temp[growTarget] = 22;
+
+            if (co2Idx !== -1 && Math.random() < 0.4) {
+              type[co2Idx] = 25; // Absorbs CO2, emits Oxygen (O2)!
+              triggerReaction('photosynthesis');
+            }
+          }
+        }
+      }
+    }
+
+    // --- Chemical Reactions with 4-way Neighbors ---
+    function interactNeighbors(x, y, idx, t) {
+      const neighbors = [
+        { i: idx - 1, x: x - 1, y: y },
+        { i: idx + 1, x: x + 1, y: y },
+        { i: idx - WIDTH, x: x, y: y - 1 },
+        { i: idx + WIDTH, x: x, y: y + 1 }
+      ];
+
+      for (let n of neighbors) {
+        if (n.x < 0 || n.x >= WIDTH || n.y < 0 || n.y >= HEIGHT) continue;
+        const ni = n.i;
+        const nt = type[ni];
+        if (nt === 0) continue;
+
+        // Thermal conduction between non-fire neighbors
+        if (t !== 7 && nt !== 7 && Math.abs(temp[idx] - temp[ni]) > 6 && Math.random() < 0.18) {
+          const avg = (temp[idx] + temp[ni]) >> 1;
+          temp[idx] = avg;
+          temp[ni] = avg;
+        }
+
+        // -------------------------------------------------------------
+        // SPECIFIC CHEMICAL REACTIONS
+        // -------------------------------------------------------------
+
+        // 1. SODIUM + WATER (Violent kinetic explosion + H2 + Base)
+        if (t === 22 && (nt === 8 || nt === 17)) {
+          triggerReaction('sodium_water');
+          throttleAudio('boom', 300);
+          type[idx] = 15; // Base (NaOH)
+          type[ni] = 24;  // Hydrogen gas (H2)
+          temp[idx] = 450;
+          temp[ni] = 450;
+          spawnExplosion(x, y, 7, 7, 5.5);
+          return true;
+        }
+
+        // 2. THERMITE REACTION: Rust (19) + Aluminum (20) at high heat or with Fire/Magnesium
+        if (t === 19 && nt === 20 && (temp[idx] > 550 || temp[ni] > 550)) {
+          triggerReaction('thermite');
+          throttleAudio('boom', 300);
+          type[idx] = 13; // Molten iron / lava
+          type[ni] = 7;   // Intense flame
+          temp[idx] = 1800;
+          temp[ni] = 1500;
+          spawnExplosion(x, y, 6, 7, 4.8);
+          return true;
+        }
+
+        // 3. HYDROGEN COMBUSTION / EXPLOSION
+        if (t === 24 && (nt === 7 || nt === 31)) {
+          triggerReaction('h2_explosion');
+          throttleAudio('boom', 250);
+          type[idx] = 10; // Steam (H2O)
+          type[ni] = 7;   // Flash
+          life[ni] = 10;
+          temp[idx] = 450;
+          spawnExplosion(x, y, 7, 10, 5.2);
+          return true;
+        }
+
+        // 4. ACID + BASE NEUTRALIZATION
+        if (t === 14 && nt === 15) {
+          triggerReaction('acid_base');
+          throttleAudio('sizzle', 250);
+          type[idx] = 17; // Saltwater
+          type[ni] = 10;  // Steam
+          temp[idx] = 105;
+          temp[ni] = 105;
+          return true;
+        }
+
+        // 5. ACID + LIMESTONE (CaCO3) -> CO2 Bubbles
+        if (t === 14 && nt === 23) {
+          triggerReaction('limestone_acid');
+          throttleAudio('sizzle', 300);
+          type[idx] = 27; // CO2 gas bubble!
+          type[ni] = 8;   // Water / solution
+          vy[idx] = -1.2; // Effervescent bubble upward kick
+          return true;
+        }
+
+        // 6. ACID + METALS (Iron, Aluminum) -> H2 Gas
+        if (t === 14 && (nt === 18 || nt === 20) && Math.random() < 0.2) {
+          triggerReaction('metal_acid');
+          throttleAudio('bubble', 200);
+          type[idx] = 24; // Hydrogen (H2) gas
+          if (Math.random() < 0.08) type[ni] = 0; // Corrode metal
+          return true;
+        }
+
+        // 7. IRON RUSTING: Iron (18) + Water (8) + Oxygen (25) or air
+        if (t === 18 && (nt === 8 || nt === 17) && Math.random() < 0.001) {
+          type[idx] = 19; // Becomes Rust
+          triggerReaction('rusting');
+          return true;
+        }
+
+        // 8. METHANE COMBUSTION: Methane (26) + Fire (7) or Spark (31)
+        if (t === 26 && (nt === 7 || nt === 31)) {
+          triggerReaction('methane_combustion');
+          throttleAudio('boom', 400);
+          type[idx] = 7;  // Fire
+          life[idx] = 8;
+          type[ni] = 27;  // CO2
+          temp[idx] = 550;
+          return true;
+        }
+
+        // 9. GUNPOWDER EXPLOSION: Gunpowder (29) + Fire/Spark or temp > 320°C
+        if (t === 29 && (nt === 7 || nt === 31 || temp[idx] > 320)) {
+          triggerReaction('gunpowder_blast');
+          throttleAudio('boom', 150);
+          type[idx] = 7; // Flash at core
+          life[idx] = 12;
+          spawnExplosion(x, y, 10, 7, 6.8);
+          return true;
+        }
+
+        // 10. MAGNESIUM FLARE: Magnesium (21) + Fire (7)
+        if (t === 21 && (nt === 7 || nt === 31 || temp[idx] > 600)) {
+          triggerReaction('magnesium_flare');
+          throttleAudio('sizzle', 200);
+          if (Math.random() < 0.35) {
+            type[idx] = 7; // Intense white-hot flame
+            life[idx] = 6;
+            temp[idx] = 1400;
+            varColor[idx] = 15;
+          }
+          // Ignite adjacent air as a bright flare without filling screen with ash
+          const upIdx = idx - WIDTH;
+          if (upIdx > 0 && type[upIdx] === 0) {
+            setPixel(x, y - 1, 7, 1200);
+            life[upIdx] = 10;
+          }
+          return true;
+        }
+
+        // 11. SULFUR BLUE FLAME: Sulfur (34) + Fire (7)
+        if (t === 34 && nt === 7) {
+          triggerReaction('sulfur_burn');
+          throttleAudio('sizzle', 300);
+          type[idx] = 7; // Flame
+          life[idx] = 10;
+          temp[idx] = 500;
+          varColor[idx] = 5;
+          return true;
+        }
+
+        // 12. LIQUID NITROGEN FLASH FREEZE
+        if (t === 30) {
+          if (nt === 8) { // Water -> Ice
+            type[ni] = 9;
+            temp[ni] = -30;
+            triggerReaction('flash_freeze');
+            throttleAudio('sizzle', 250);
+          } else if (nt === 13) { // Lava -> Stone
+            type[ni] = 4;
+            temp[ni] = 40;
+            triggerReaction('flash_freeze');
+            throttleAudio('sizzle', 250);
+          }
+        }
+
+        // 13. FIRE SUFFOCATION BY CO2 (27) or WATER (8)
+        if (t === 7) {
+          if (nt === 27) { // CO2 extinguishes Fire immediately
+            type[idx] = 0;
+            temp[idx] = 30;
+            triggerReaction('extinguish');
+            return true;
+          } else if (nt === 8) { // Water extinguishes Fire
+            type[idx] = 10; // Small steam puff
+            life[idx] = 90;
+            temp[idx] = 95;
+            triggerReaction('extinguish');
+            throttleAudio('sizzle', 300);
+            return true;
+          }
+        }
+
+        // 14. SALT DISSOLUTION: Salt (16) + Water (8) -> Saltwater (17)
+        if (t === 16 && nt === 8) {
+          type[idx] = 0;
+          type[ni] = 17; // Salt dissolves into the water pixel!
+          triggerReaction('dissolution');
+          return true;
+        }
+
+        // 15. GRADUAL COMBUSTION OF FUELS: Wood (5), Plant (6), Oil (11)
+        if ((t === 5 || t === 6 || t === 11) && (nt === 7 || nt === 13)) {
+          // Spawn a short-lived flame tongue in adjacent empty air above
+          const upIdx = idx - WIDTH;
+          if (upIdx > 0 && type[upIdx] === 0 && Math.random() < 0.45) {
+            setPixel(x, y - 1, 7, 550);
+            life[upIdx] = 8;
+          }
+          // Consume the fuel pixel gradually so it burns realistically and then stops!
+          const burnChance = (t === 5) ? 0.045 : (t === 6 ? 0.14 : 0.18);
+          if (Math.random() < burnChance) {
+            type[idx] = 7;
+            life[idx] = 10;
+            temp[idx] = 550;
+            return true;
+          }
+        }
+
+        // 16. OXYGEN ACCELERATES FIRE briefly
+        if (t === 25 && nt === 7) {
+          type[idx] = 7;
+          life[idx] = 12;
+          temp[idx] = 750;
+          return true;
+        }
+
+        // 17. ACID CORROSION ON ORGANICS (Plant 6, Wood 5)
+        if (t === 14 && (nt === 6 || nt === 5) && Math.random() < 0.2) {
+          type[ni] = 0;
+          type[idx] = 27; // Releases a tiny CO2 bubble
+          throttleAudio('sizzle', 400);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    // ==========================================================================
+    // KINETIC SHOCKWAVE EXPLOSION (Launches surrounding particles instead of ash spam!)
+    // ==========================================================================
+    function spawnExplosion(cx, cy, radius, coreByproduct, blastPower = 5.5) {
+      const shockRadius = Math.round(radius * 2.2);
+      const shockRadSq = shockRadius * shockRadius;
+      const coreRadSq = 4; // Only 2px core turns into reaction gas/flame
+
+      for (let dy = -shockRadius; dy <= shockRadius; dy++) {
+        for (let dx = -shockRadius; dx <= shockRadius; dx++) {
+          const distSq = dx * dx + dy * dy;
+          if (distSq > shockRadSq) continue;
+
+          const px = cx + dx;
+          const py = cy + dy;
+          if (px <= 0 || px >= WIDTH - 1 || py <= 0 || py >= HEIGHT - 1) continue;
+
+          const pidx = py * WIDTH + px;
+          const pt = type[pidx];
+          if (pt === 1) continue; // Indestructible wall stays put
+
+          const dist = Math.sqrt(distSq) || 0.5;
+          const falloff = Math.max(0, 1 - dist / shockRadius);
+
+          // Inner reaction core: spawn brief flash / byproduct ONLY in empty air or explosive fuel
+          if (distSq <= coreRadSq && (pt === 0 || pt === 29 || pt === 22 || pt === 24)) {
+            type[pidx] = coreByproduct;
+            life[pidx] = 10 + ((Math.random() * 6) | 0);
+            temp[pidx] = 650;
+            const angle = Math.atan2(dy, dx) + (Math.random() - 0.5) * 0.5;
+            vx[pidx] = Math.cos(angle) * blastPower * 0.7;
+            vy[pidx] = Math.sin(angle) * blastPower * 0.7 - 1.0;
+            continue;
+          }
+
+          // Surrounding particles: DO NOT turn into ash/smoke! Launch them outward with kinetic energy!
+          if (pt !== 0) {
+            const elem = ELEM_MAP[pt];
+            // Heavy solids only get dislodged near the inner blast radius
+            if (elem && elem.state === STATE_SOLID && dist > radius * 0.85) {
+              continue;
+            }
+
+            // Mass factor: lighter particles fly faster, heavier particles fly with momentum
+            const massFactor = (elem && elem.density > 80) ? 0.55 : 1.0;
+            const speed = blastPower * falloff * massFactor * (0.85 + Math.random() * 0.5);
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            // Impart radial outward velocity + upward lift so debris arcs through the air!
+            vx[pidx] += nx * speed + (Math.random() - 0.5) * 1.2;
+            vy[pidx] += ny * speed - Math.abs(nx) * 1.3 - Math.random() * 1.0;
+          }
+        }
+      }
+    }
+
+    // ==========================================================================
+    // RENDER ENGINE (Direct 32-bit ImageData buffer write)
+    // ==========================================================================
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const imgData = ctx.createImageData(WIDTH, HEIGHT);
+    const buf32 = new Uint32Array(imgData.data.buffer);
+
+    // Thermal color ramp calculation (-50°C to 1500°C)
+    function getThermalColor(t) {
+      if (t < 0) {
+        const factor = Math.min(1, Math.max(0, (t + 50) / 50));
+        return [0, Math.floor(factor * 120), Math.floor(150 + factor * 105)];
+      } else if (t < 50) {
+        const factor = t / 50;
+        return [0, Math.floor(120 + factor * 80), Math.floor(255 - factor * 155)];
+      } else if (t < 150) {
+        const factor = (t - 50) / 100;
+        return [Math.floor(factor * 255), 200, 100 - Math.floor(factor * 100)];
+      } else if (t < 500) {
+        const factor = (t - 150) / 350;
+        return [255, Math.floor(200 - factor * 120), 0];
+      } else if (t < 1000) {
+        const factor = (t - 500) / 500;
+        return [255, Math.floor(80 + factor * 120), Math.floor(factor * 80)];
+      } else {
+        const factor = Math.min(1, (t - 1000) / 500);
+        return [255, Math.floor(200 + factor * 55), Math.floor(80 + factor * 175)];
+      }
+    }
+
+    function render() {
+      let particleCount = 0;
+
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        const t = type[i];
+        if (t !== 0) particleCount++;
+
+        let r = 10, g = 15, b = 26;
+
+        if (thermalView) {
+          const tc = getThermalColor(temp[i]);
+          r = tc[0]; g = tc[1]; b = tc[2];
+        } else if (t === 0) {
+          // Subtle atmospheric air shimmer (visualizes ambient atmosphere & heat waves)
+          const airShimmer = (varColor[i] & 3);
+          const heatGlow = Math.max(0, Math.min(40, (temp[i] - 22) >> 2));
+          r = 9 + airShimmer + heatGlow;
+          g = 14 + airShimmer + (heatGlow >> 1);
+          b = 25 + (airShimmer << 1);
+        } else {
+          const elem = ELEM_MAP[t] || ELEM_MAP[0];
+          r = elem.color[0];
+          g = elem.color[1];
+          b = elem.color[2];
+
+          // Apply organic per-particle noise variation
+          const noise = (varColor[i] - 8) * 3;
+          r = Math.max(0, Math.min(255, r + noise));
+          g = Math.max(0, Math.min(255, g + noise));
+          b = Math.max(0, Math.min(255, b + noise));
+
+          // Special animated effects
+          if (t === 7) { // Fire animated flicker (yellow-white core -> orange -> red tip as life progresses)
+            const lifeRatio = Math.min(1, life[i] / 24);
+            r = 255;
+            g = Math.max(30, Math.floor(220 * (1 - lifeRatio * 0.85)));
+            b = Math.max(5, Math.floor(80 * (1 - lifeRatio)));
+          } else if (t === 31) { // Spark flash
+            r = 255; g = 255; b = 150 + ((Math.random() * 105) | 0);
+          } else if (t === 32) { // Uranium glow
+            if (Math.random() < 0.2) {
+              g = 255; r = 120; b = 150;
+            }
+          }
+        }
+
+        // Little Endian RGBA packing (0xAABBGGRR)
+        buf32[i] = (255 << 24) | (b << 16) | (g << 8) | r;
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      document.getElementById('hudParticles').textContent = particleCount.toLocaleString();
+    }
+
+    // ==========================================================================
+    // BRUSH, DRAWING TOOLS & INPUT HANDLING
+    // ==========================================================================
+    function getCanvasCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = Math.floor(((clientX - rect.left) / rect.width) * WIDTH);
+      const y = Math.floor(((clientY - rect.top) / rect.height) * HEIGHT);
+      return { x: Math.max(0, Math.min(WIDTH - 1, x)), y: Math.max(0, Math.min(HEIGHT - 1, y)) };
+    }
+
+    function applyBrush(cx, cy) {
+      const radius = brushSize;
+      const elemToPlace = (currentTool === 'eraser') ? 0 : activeElemId;
+
+      if (currentTool === 'heat') {
+        for (let dy = -radius; dy <= radius; dy++) {
+          for (let dx = -radius; dx <= radius; dx++) {
+            if (dx * dx + dy * dy <= radius * radius) {
+              const px = cx + dx, py = cy + dy;
+              if (px > 0 && px < WIDTH - 1 && py > 0 && py < HEIGHT - 1) {
+                temp[py * WIDTH + px] = Math.min(2500, temp[py * WIDTH + px] + 80);
+              }
+            }
+          }
+        }
+        return;
+      }
+
+      if (currentTool === 'cool') {
+        for (let dy = -radius; dy <= radius; dy++) {
+          for (let dx = -radius; dx <= radius; dx++) {
+            if (dx * dx + dy * dy <= radius * radius) {
+              const px = cx + dx, py = cy + dy;
+              if (px > 0 && px < WIDTH - 1 && py > 0 && py < HEIGHT - 1) {
+                temp[py * WIDTH + px] = Math.max(-200, temp[py * WIDTH + px] - 40);
+              }
+            }
+          }
+        }
+        return;
+      }
+
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (dx * dx + dy * dy <= radius * radius) {
+            const px = cx + dx, py = cy + dy;
+            if (px > 0 && px < WIDTH - 1 && py > 0 && py < HEIGHT - 1) {
+              if (currentTool === 'spray') {
+                if (Math.random() < 0.25) {
+                  setPixel(px, py, elemToPlace);
+                }
+              } else {
+                setPixel(px, py, elemToPlace);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Bresenham's line algorithm for smooth continuous strokes
+    function drawLine(x0, y0, x1, y1) {
+      const dx = Math.abs(x1 - x0);
+      const dy = Math.abs(y1 - y0);
+      const sx = (x0 < x1) ? 1 : -1;
+      const sy = (y0 < y1) ? 1 : -1;
+      let err = dx - dy;
+
+      let curX = x0, curY = y0;
+      while (true) {
+        applyBrush(curX, curY);
+        if (curX === x1 && curY === y1) break;
+        const e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; curX += sx; }
+        if (e2 < dx) { err += dx; curY += sy; }
+      }
+    }
+
+    // Flood fill tool (BFS)
+    function floodFill(startX, startY, targetElem) {
+      const startIdx = startY * WIDTH + startX;
+      const origType = type[startIdx];
+      if (origType === targetElem) return;
+
+      const queue = [startIdx];
+      const visited = new Uint8Array(TOTAL_CELLS);
+      visited[startIdx] = 1;
+
+      while (queue.length > 0) {
+        const idx = queue.pop();
+        const px = idx % WIDTH;
+        const py = Math.floor(idx / WIDTH);
+
+        setPixel(px, py, targetElem);
+
+        const neighbors = [
+          { x: px - 1, y: py },
+          { x: px + 1, y: py },
+          { x: px, y: py - 1 },
+          { x: px, y: py + 1 }
+        ];
+
+        for (let n of neighbors) {
+          if (n.x > 0 && n.x < WIDTH - 1 && n.y > 0 && n.y < HEIGHT - 1) {
+            const ni = n.y * WIDTH + n.x;
+            if (!visited[ni] && type[ni] === origType) {
+              visited[ni] = 1;
+              queue.push(ni);
+            }
+          }
+        }
+      }
+    }
+
+    // Pointer & Touch Event Handlers (optimized for iPad / Safari touch input)
+    function handleDrawStart(e) {
+      if (e.cancelable && e.type.startsWith('touch')) {
+        e.preventDefault();
+      }
+      initAudio();
+      isMouseDown = true;
+      const { x, y } = getCanvasCoords(e);
+      lastMouseX = x;
+      lastMouseY = y;
+
+      if (currentTool === 'fill') {
+        floodFill(x, y, activeElemId);
+      } else if (currentTool === 'line') {
+        lineStartX = x;
+        lineStartY = y;
+      } else {
+        applyBrush(x, y);
+      }
+    }
+
+    function handleDrawMove(e) {
+      const isTouch = e.type.startsWith('touch');
+      if (!isMouseDown && !e.type.startsWith('mouse') && !e.type.startsWith('pointer')) {
+        return;
+      }
+      if (isMouseDown && e.cancelable && isTouch) {
+        e.preventDefault();
+      }
+      const { x, y } = getCanvasCoords(e);
+
+      // Update Inspector HUD
+      const idx = y * WIDTH + x;
+      const inspectedElem = ELEM_MAP[type[idx]] || ELEM_MAP[0];
+      document.getElementById('hudElemName').textContent = inspectedElem.name;
+      document.getElementById('hudElemFormula').textContent = inspectedElem.formula ? `(${inspectedElem.formula})` : '';
+      document.getElementById('hudElemSwatch').style.backgroundColor = `rgb(${inspectedElem.color.join(',')})`;
+      document.getElementById('hudTemp').textContent = `${temp[idx]}°C`;
+      document.getElementById('hudCoord').textContent = `(${x}, ${y})`;
+
+      // Drawing if mouse or touch is active
+      if (isMouseDown && currentTool !== 'line' && currentTool !== 'fill') {
+        drawLine(lastMouseX, lastMouseY, x, y);
+        lastMouseX = x;
+        lastMouseY = y;
+      }
+    }
+
+    function handleDrawEnd(e) {
+      if (isMouseDown && currentTool === 'line' && lineStartX !== -1) {
+        const { x, y } = getCanvasCoords(e);
+        drawLine(lineStartX, lineStartY, x, y);
+        lineStartX = -1;
+        lineStartY = -1;
+      }
+      isMouseDown = false;
+    }
+
+    canvas.addEventListener('pointerdown', handleDrawStart);
+    canvas.addEventListener('touchstart', handleDrawStart, { passive: false });
+    window.addEventListener('pointermove', handleDrawMove);
+    canvas.addEventListener('touchmove', handleDrawMove, { passive: false });
+    window.addEventListener('pointerup', handleDrawEnd);
+    window.addEventListener('touchend', handleDrawEnd);
+    window.addEventListener('touchcancel', handleDrawEnd);
+
+    // ==========================================================================
+    // UI POPULATION & EVENT CONTROLS
+    // ==========================================================================
+    function setupElementPalette() {
+      const grid = document.getElementById('elementGrid');
+      grid.innerHTML = '';
+
+      ELEMENTS.forEach(elem => {
+        if (elem.id === 0) return; // Skip air from button list
+
+        const btn = document.createElement('button');
+        btn.className = `elem-btn flex items-center justify-between p-1.5 rounded-md border border-slate-800 bg-slate-800/40 hover:bg-slate-700/60 transition text-left group ${elem.id === activeElemId ? 'border-cyan-500 bg-cyan-950/40 ring-1 ring-cyan-500/50' : ''}`;
+        btn.setAttribute('data-id', elem.id);
+        btn.setAttribute('data-cat', elem.cat);
+
+        btn.innerHTML = `
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="w-3.5 h-3.5 rounded-sm shrink-0 border border-white/20" style="background-color: rgb(${elem.color.join(',')});"></span>
+            <div class="truncate">
+              <div class="font-medium text-slate-200 truncate group-hover:text-cyan-200">${elem.name}</div>
+            </div>
+          </div>
+          <span class="font-mono text-[10px] text-slate-400 font-semibold px-1 rounded bg-slate-900 shrink-0 ml-1">${elem.formula || elem.en}</span>
+        `;
+
+        btn.addEventListener('click', () => {
+          selectElement(elem.id);
+        });
+
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectElement(id) {
+      activeElemId = id;
+      const elem = ELEM_MAP[id];
+      if (!elem) return;
+
+      document.getElementById('activeElemName').textContent = elem.name;
+      document.getElementById('activeElemFormula').textContent = elem.formula || elem.en;
+      document.getElementById('activeElemColorDot').style.backgroundColor = `rgb(${elem.color.join(',')})`;
+      document.getElementById('elemDescText').textContent = elem.desc;
+
+      const stateNames = { 1: '고체 (벽)', 2: '분말 (고체)', 3: '액체', 4: '기체', 5: '에너지/플라즈마' };
+      document.getElementById('activeElemState').textContent = stateNames[elem.state] || '물질';
+
+      // Update button active rings
+      document.querySelectorAll('.elem-btn').forEach(btn => {
+        if (parseInt(btn.getAttribute('data-id'), 10) === id) {
+          btn.classList.add('border-cyan-500', 'bg-cyan-950/40', 'ring-1', 'ring-cyan-500/50');
+        } else {
+          btn.classList.remove('border-cyan-500', 'bg-cyan-950/40', 'ring-1', 'ring-cyan-500/50');
+        }
+      });
+    }
+
+    // Category Tabs Filtering
+    document.querySelectorAll('.cat-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.cat-tab').forEach(t => {
+          t.className = 'cat-tab px-2.5 py-1 rounded-t font-medium text-slate-400 hover:text-slate-200';
+        });
+        tab.className = 'cat-tab px-2.5 py-1 rounded-t font-medium text-cyan-400 border-b-2 border-cyan-500 bg-slate-800/50';
+
+        const cat = tab.getAttribute('data-cat');
+        document.querySelectorAll('.elem-btn').forEach(btn => {
+          if (cat === 'all' || btn.getAttribute('data-cat') === cat) {
+            btn.style.display = 'flex';
+          } else {
+            btn.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Tool Buttons
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tool-btn').forEach(b => {
+          b.className = 'tool-btn px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center gap-1 transition';
+        });
+        btn.className = 'tool-btn px-2 py-1 rounded bg-cyan-600 text-white font-medium flex items-center gap-1 transition';
+        currentTool = btn.getAttribute('data-tool');
+      });
+    });
+
+    // Brush Size Buttons
+    document.querySelectorAll('.size-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.size-btn').forEach(b => {
+          b.className = 'size-btn px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono text-xs transition';
+        });
+        btn.className = 'size-btn px-2 py-0.5 rounded bg-cyan-600 text-white font-mono text-xs font-bold transition';
+        brushSize = parseInt(btn.getAttribute('data-size'), 10);
+      });
+    });
+
+    // Top Controls: Play/Pause
+    const btnPlayPause = document.getElementById('btnPlayPause');
+    const playIcon = document.getElementById('playIcon');
+    const playText = document.getElementById('playText');
+    const pausedBadge = document.getElementById('pausedBadge');
+
+    btnPlayPause.addEventListener('click', () => {
+      isPaused = !isPaused;
+      if (isPaused) {
+        playIcon.textContent = '▶️';
+        playText.textContent = '재개';
+        btnPlayPause.classList.replace('bg-emerald-600', 'bg-amber-600');
+        btnPlayPause.classList.replace('hover:bg-emerald-500', 'hover:bg-amber-500');
+        pausedBadge.classList.remove('hidden');
+      } else {
+        playIcon.textContent = '⏸️';
+        playText.textContent = '일시정지';
+        btnPlayPause.classList.replace('bg-amber-600', 'bg-emerald-600');
+        btnPlayPause.classList.replace('hover:bg-amber-500', 'hover:bg-emerald-500');
+        pausedBadge.classList.add('hidden');
+      }
+    });
+
+    // Step Button
+    document.getElementById('btnStep').addEventListener('click', () => {
+      stepSimulation();
+      render();
+    });
+
+    // Simulation Speed Buttons
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.speed-btn').forEach(b => {
+          b.className = 'px-1.5 py-1 rounded hover:bg-slate-700 transition speed-btn';
+        });
+        btn.className = 'px-1.5 py-1 rounded bg-cyan-600 text-white font-medium transition speed-btn';
+        simSpeed = parseFloat(btn.getAttribute('data-speed'));
+      });
+    });
+
+    // Thermal View Toggle
+    const btnThermal = document.getElementById('btnThermal');
+    const thermalBadge = document.getElementById('thermalBadge');
+    btnThermal.addEventListener('click', () => {
+      thermalView = !thermalView;
+      if (thermalView) {
+        btnThermal.classList.add('bg-red-900', 'border-red-600', 'text-red-200');
+        thermalBadge.classList.remove('hidden');
+      } else {
+        btnThermal.classList.remove('bg-red-900', 'border-red-600', 'text-red-200');
+        thermalBadge.classList.add('hidden');
+      }
+    });
+
+    // Sound Toggle
+    const btnSound = document.getElementById('btnSound');
+    const soundIcon = document.getElementById('soundIcon');
+    btnSound.addEventListener('click', () => {
+      initAudio();
+      soundEnabled = !soundEnabled;
+      soundIcon.textContent = soundEnabled ? '🔊' : '🔇';
+      btnSound.classList.toggle('text-slate-500', !soundEnabled);
+    });
+
+    // Clear Modal Controls
+    const btnClear = document.getElementById('btnClear');
+    const clearConfirmModal = document.getElementById('clearConfirmModal');
+    const btnCancelClear = document.getElementById('btnCancelClear');
+    const btnConfirmClear = document.getElementById('btnConfirmClear');
+
+    btnClear.addEventListener('click', () => {
+      clearConfirmModal.classList.remove('hidden');
+    });
+
+    btnCancelClear.addEventListener('click', () => {
+      clearConfirmModal.classList.add('hidden');
+    });
+
+    btnConfirmClear.addEventListener('click', () => {
+      initGrid();
+      clearConfirmModal.classList.add('hidden');
+    });
+
+    // Codex Modal Controls
+    const btnOpenCodex = document.getElementById('btnOpenCodex');
+    const codexModal = document.getElementById('codexModal');
+    const btnCloseCodex = document.getElementById('btnCloseCodex');
+    const btnModalCloseAction = document.getElementById('btnModalCloseAction');
+
+    btnOpenCodex.addEventListener('click', () => {
+      updateCodexProgressUI();
+      codexModal.classList.remove('hidden');
+    });
+
+    btnCloseCodex.addEventListener('click', () => {
+      codexModal.classList.add('hidden');
+    });
+
+    btnModalCloseAction.addEventListener('click', () => {
+      codexModal.classList.add('hidden');
+    });
+
+    // ==========================================================================
+    // EXPERIMENT PRESETS
+    // ==========================================================================
+    function loadPreset(presetName) {
+      initGrid();
+
+      if (presetName === 'sodium_water') {
+        // Water tank with Sodium suspended above
+        // Beaker walls
+        for (let y = 50; y < 140; y++) {
+          setPixel(40, y, 3, 22); // Glass beaker
+          setPixel(200, y, 3, 22);
+        }
+        for (let x = 40; x <= 200; x++) {
+          setPixel(x, 140, 3, 22);
+        }
+        // Fill water in beaker
+        for (let y = 80; y < 140; y++) {
+          for (let x = 42; x < 200; x++) {
+            setPixel(x, y, 8, 22);
+          }
+        }
+        // Sodium chunks above ready to fall
+        for (let y = 30; y < 45; y++) {
+          for (let x = 110; x < 130; x++) {
+            setPixel(x, y, 22, 22); // Sodium
+          }
+        }
+      } else if (presetName === 'thermite') {
+        // Crucible with Rust (19) + Aluminum (20) and Magnesium (21) fuse
+        // Crucible container
+        for (let y = 70; y < 135; y++) {
+          setPixel(70, y, 4, 22); // Stone crucible
+          setPixel(170, y, 4, 22);
+        }
+        for (let x = 70; x <= 170; x++) {
+          setPixel(x, 135, 4, 22);
+        }
+        // Mix Rust and Aluminum
+        for (let y = 95; y < 135; y++) {
+          for (let x = 72; x < 170; x++) {
+            const e = (Math.random() < 0.5) ? 19 : 20; // Rust or Al
+            setPixel(x, y, e, 22);
+          }
+        }
+        // Magnesium fuse on top
+        for (let y = 85; y < 95; y++) {
+          for (let x = 115; x < 125; x++) {
+            setPixel(x, y, 21, 22);
+          }
+        }
+        // Fire spark to ignite fuse
+        setPixel(120, 84, 7, 750);
+      } else if (presetName === 'electrolysis') {
+        // Tank with saltwater, two iron electrodes, spark source
+        for (let y = 40; y < 135; y++) {
+          setPixel(50, y, 3, 22);
+          setPixel(190, y, 3, 22);
+        }
+        for (let x = 50; x <= 190; x++) {
+          setPixel(x, 135, 3, 22);
+        }
+        // Saltwater
+        for (let y = 70; y < 135; y++) {
+          for (let x = 52; x < 190; x++) {
+            setPixel(x, y, 17, 22);
+          }
+        }
+        // Left Electrode (Cathode - produces H2)
+        for (let y = 75; y < 125; y++) {
+          setPixel(85, y, 18, 22); // Iron
+          setPixel(86, y, 18, 22);
+        }
+        // Right Electrode (Anode - produces O2)
+        for (let y = 75; y < 125; y++) {
+          setPixel(155, y, 35, 22); // Copper
+          setPixel(156, y, 35, 22);
+        }
+        // Active Sparks on electrodes
+        setPixel(85, 74, 31, 200);
+        setPixel(155, 74, 31, 200);
+      } else if (presetName === 'acid_base') {
+        // Two beakers: Beaker 1 has Acid + Limestone, Beaker 2 has Acid meeting Base
+        // Beaker 1
+        for (let y = 60; y < 135; y++) {
+          setPixel(30, y, 3, 22); setPixel(110, y, 3, 22);
+        }
+        for (let x = 30; x <= 110; x++) setPixel(x, 135, 3, 22);
+        for (let y = 120; y < 135; y++) {
+          for (let x = 32; x < 110; x++) setPixel(x, y, 23, 22); // Limestone
+        }
+        for (let y = 80; y < 110; y++) {
+          for (let x = 45; x < 95; x++) setPixel(x, y, 14, 22); // Acid falling
+        }
+
+        // Beaker 2
+        for (let y = 60; y < 135; y++) {
+          setPixel(130, y, 3, 22); setPixel(210, y, 3, 22);
+        }
+        for (let x = 130; x <= 210; x++) setPixel(x, 135, 3, 22);
+        for (let y = 100; y < 135; y++) {
+          for (let x = 132; x < 210; x++) setPixel(x, y, 15, 22); // Base
+        }
+        for (let y = 70; y < 95; y++) {
+          for (let x = 145; x < 195; x++) setPixel(x, y, 14, 22); // Acid meeting base
+        }
+      } else if (presetName === 'oil_fire') {
+        // Water tank, oil floating on top catching fire, and CO2 funnel overhead
+        for (let y = 50; y < 135; y++) {
+          setPixel(35, y, 3, 22); setPixel(205, y, 3, 22);
+        }
+        for (let x = 35; x <= 205; x++) setPixel(x, 135, 3, 22);
+        // Water layer
+        for (let y = 95; y < 135; y++) {
+          for (let x = 37; x < 205; x++) setPixel(x, y, 8, 22);
+        }
+        // Oil layer floating
+        for (let y = 80; y < 95; y++) {
+          for (let x = 37; x < 205; x++) setPixel(x, y, 11, 22);
+        }
+        // Small fire spot on right
+        setPixel(180, 79, 7, 600);
+        // CO2 gas chamber on left ready to extinguish
+        for (let y = 20; y < 45; y++) {
+          for (let x = 50; x < 100; x++) setPixel(x, y, 27, 22);
+        }
+      } else if (presetName === 'volcano') {
+        // Volcano mountain of stone with boiling lava, and Liquid Nitrogen container overhead
+        // Sloped stone mountain
+        for (let x = 20; x < 220; x++) {
+          const height = Math.floor(Math.max(0, 70 - Math.abs(x - 120) * 0.7));
+          for (let y = 140 - height; y < 140; y++) {
+            setPixel(x, y, 4, 22);
+          }
+        }
+        // Magma crater in center
+        for (let y = 90; y < 140; y++) {
+          for (let x = 105; x < 135; x++) {
+            setPixel(x, y, 13, 1150);
+          }
+        }
+        // Liquid Nitrogen clouds overhead
+        for (let y = 15; y < 35; y++) {
+          for (let x = 90; x < 150; x++) {
+            setPixel(x, y, 30, -196);
+          }
+        }
+      } else if (presetName === 'magnesium_flare') {
+        // Magnesium flare tower with gunpowder base
+        for (let y = 60; y < 135; y++) {
+          setPixel(105, y, 21, 22); // Magnesium
+          setPixel(106, y, 21, 22);
+          setPixel(107, y, 21, 22);
+        }
+        for (let y = 125; y < 135; y++) {
+          for (let x = 80; x < 135; x++) {
+            setPixel(x, y, 29, 22); // Gunpowder pile
+          }
+        }
+        // Spark top
+        setPixel(106, 59, 7, 850);
+      }
+    }
+
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        loadPreset(btn.getAttribute('data-preset'));
+      });
+    });
+
+    // ==========================================================================
+    // MAIN RAF LOOP & FPS COUNTER
+    // ==========================================================================
+    let lastTime = performance.now();
+    let frameCounter = 0;
+    let fpsUpdateTime = lastTime;
+
+    function gameLoop(now) {
+      frameCounter++;
+      if (now - fpsUpdateTime >= 500) {
+        const fps = Math.round((frameCounter * 1000) / (now - fpsUpdateTime));
+        document.getElementById('hudFps').textContent = fps;
+        frameCounter = 0;
+        fpsUpdateTime = now;
+      }
+
+      if (!isPaused) {
+        // Execute steps according to simulation speed
+        if (simSpeed === 0.5) {
+          if (frameCounter % 2 === 0) stepSimulation();
+        } else if (simSpeed === 1.0) {
+          stepSimulation();
+        } else if (simSpeed === 2.0) {
+          stepSimulation();
+          stepSimulation();
+        }
+      }
+
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Robust, zero-delay initialization (starts immediately without waiting for slow external CDN/fonts)
+    let appStarted = false;
+    function startApp() {
+      if (appStarted) return;
+      appStarted = true;
+      initGrid();
+      setupElementPalette();
+      selectElement(2); // Sand selected
+      updateCodexProgressUI();
+
+      // Load initial preset (Sodium Water experiment)
+      loadPreset('sodium_water');
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Start immediately if DOM is ready, otherwise on DOMContentLoaded or load
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      startApp();
+    } else {
+      document.addEventListener('DOMContentLoaded', startApp);
+      window.addEventListener('load', startApp);
+    }
+    // Fallback safety timeout (ensures it opens within 50ms on mobile Safari/iPads)
+    setTimeout(startApp, 50);
+  </script>
 </body>
 </html>
